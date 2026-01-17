@@ -3,7 +3,21 @@ import { useState } from "react";
 /*
    TIPOS
 */
-type Status = "por_hacer" | "en_progreso" | "finalizado";
+// type Status = "por_hacer" | "en_progreso" | "finalizado";
+
+/*
+En este caso para crear un type de status lo debes crear como un
+enum que es lo que se usa para tener valores predefinidos en TypeScript
+y asi evitar errores de tipeo al usar strings directamente.
+Los type e interfaces son mas para definir estructuras de datos
+y no tanto para definir valores predefinidos.
+*/
+
+enum Status {
+  pending = "Por hacer",
+  in_progress = "En progreso",
+  completed = "Finalizado",
+}
 
 interface Task {
   id: number;
@@ -23,21 +37,21 @@ const initialTasks: Task[] = [
     title: "Estudiar React",
     description: "Repasar componentes, props y estado",
     category: "Estudio",
-    status: "por_hacer",
+    status: Status.pending,
   },
   {
     id: 2,
     title: "Repasar TypeScript",
     description: "Tipos, interfaces y generics",
     category: "Estudio",
-    status: "en_progreso",
+    status: Status.in_progress,
   },
   {
     id: 3,
     title: "Hacer ejercicio",
     description: "Rutina de 30 minutos",
     category: "Salud",
-    status: "finalizado",
+    status: Status.completed,
   },
 ];
 
@@ -48,7 +62,7 @@ export default function Layout() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
-  const [status, setStatus] = useState<Status>("por_hacer");
+  const [status, setStatus] = useState<Status>(Status.pending);
 
   const getTasksByStatus = (status: Status) =>
     tasks.filter((task) => task.status === status);
@@ -69,7 +83,7 @@ export default function Layout() {
     setTitle("");
     setDescription("");
     setCategory("");
-    setStatus("por_hacer");
+    setStatus(Status.pending);
     setShowForm(false);
   };
 
@@ -122,19 +136,19 @@ export default function Layout() {
         <Column
           title="Por hacer"
           color="#3b82f6"
-          tasks={getTasksByStatus("por_hacer")}
+          tasks={getTasksByStatus(Status.pending)}
         />
 
         <Column
           title="En progreso"
           color="#f59e0b"
-          tasks={getTasksByStatus("en_progreso")}
+          tasks={getTasksByStatus(Status.in_progress)}
         />
 
         <Column
           title="Finalizado"
           color="#22c55e"
-          tasks={getTasksByStatus("finalizado")}
+          tasks={getTasksByStatus(Status.completed)}
         />
       </main>
 
@@ -148,6 +162,12 @@ export default function Layout() {
 /* =======================
    COMPONENTES INTERNOS
 ======================= */
+
+/*
+ Ahora toma este componente y crea una carpeta llamada components
+ dentro de src y mueve este componente ahi como Column.tsx
+ y luego importa el componente aqui en este archivo
+*/
 
 function Column({
   title,
