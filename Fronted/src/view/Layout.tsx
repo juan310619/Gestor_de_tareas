@@ -1,11 +1,16 @@
 import { useState } from "react";
+import Column from "../components/Column";
 
 /*
    TIPOS
 */
-type Status = "por_hacer" | "en_progreso" | "finalizado";
+export enum Status {
+  pending = "Por hacer",
+  in_progress = "En progreso",
+  completed = "Finalizado",
+}
 
-interface Task {
+export interface Task {
   id: number;
   title: string;
   description: string;
@@ -23,21 +28,21 @@ const initialTasks: Task[] = [
     title: "Estudiar React",
     description: "Repasar componentes, props y estado",
     category: "Estudio",
-    status: "por_hacer",
+    status: Status.pending,
   },
   {
     id: 2,
     title: "Repasar TypeScript",
     description: "Tipos, interfaces y generics",
     category: "Estudio",
-    status: "en_progreso",
+    status: Status.in_progress,
   },
   {
     id: 3,
     title: "Hacer ejercicio",
     description: "Rutina de 30 minutos",
     category: "Salud",
-    status: "finalizado",
+    status: Status.completed,
   },
 ];
 
@@ -48,7 +53,7 @@ export default function Layout() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
-  const [status, setStatus] = useState<Status>("por_hacer");
+  const [status, setStatus] = useState<Status>(Status.pending);
 
   const getTasksByStatus = (status: Status) =>
     tasks.filter((task) => task.status === status);
@@ -69,7 +74,7 @@ export default function Layout() {
     setTitle("");
     setDescription("");
     setCategory("");
-    setStatus("por_hacer");
+    setStatus(Status.pending);
     setShowForm(false);
   };
 
@@ -108,9 +113,9 @@ export default function Layout() {
             value={status}
             onChange={(e) => setStatus(e.target.value as Status)}
           >
-            <option value="por_hacer">Por hacer</option>
-            <option value="en_progreso">En progreso</option>
-            <option value="finalizado">Finalizado</option>
+            <option value={Status.pending}>Por hacer</option>
+            <option value={Status.in_progress}>En progreso</option>
+            <option value={Status.completed}>Finalizado</option>
           </select>
 
           <button onClick={addTask}>Guardar tarea</button>
@@ -122,19 +127,22 @@ export default function Layout() {
         <Column
           title="Por hacer"
           color="#3b82f6"
-          tasks={getTasksByStatus("por_hacer")}
+          tasks={getTasksByStatus(Status.pending)}
+          styles={styles}
         />
 
         <Column
           title="En progreso"
           color="#f59e0b"
-          tasks={getTasksByStatus("en_progreso")}
+          tasks={getTasksByStatus(Status.in_progress)}
+          styles={styles}
         />
 
         <Column
           title="Finalizado"
           color="#22c55e"
-          tasks={getTasksByStatus("finalizado")}
+          tasks={getTasksByStatus(Status.completed)}
+          styles={styles}
         />
       </main>
 
@@ -146,48 +154,7 @@ export default function Layout() {
 }
 
 /* =======================
-   COMPONENTES INTERNOS
-======================= */
-
-function Column({
-  title,
-  tasks,
-  color,
-}: {
-  title: string;
-  tasks: Task[];
-  color: string;
-}) {
-  return (
-    <section style={styles.column}>
-      <h2 style={{ ...styles.columnTitle, borderColor: color }}>
-        {title} <span style={styles.count}>{tasks.length}</span>
-      </h2>
-
-      <div style={styles.taskList}>
-        {tasks.map((task) => (
-          <TaskCard key={task.id} task={task} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function TaskCard({ task }: { task: Task }) {
-  return (
-    <div style={styles.card}>
-      <h3 style={styles.cardTitle}>{task.title}</h3>
-      <p style={styles.cardDescription}>{task.description}</p>
-
-      <div style={styles.cardFooter}>
-        <span style={styles.category}>{task.category}</span>
-      </div>
-    </div>
-  );
-}
-
-/* =======================
-   ESTILOS (SIN CAMBIOS)
+   ESTILOS 
 ======================= */
 
 const styles: { [key: string]: React.CSSProperties } = {
