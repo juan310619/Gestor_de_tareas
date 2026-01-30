@@ -29,7 +29,6 @@ const initialTasks: Task[] = [
     description: "Repasar componentes, props y estado",
     category: "Estudio",
     status: Status.pending,
-    status: Status.pending,
   },
   {
     id: 2,
@@ -37,14 +36,12 @@ const initialTasks: Task[] = [
     description: "Tipos, interfaces y generics",
     category: "Estudio",
     status: Status.in_progress,
-    status: Status.in_progress,
   },
   {
     id: 3,
     title: "Hacer ejercicio",
     description: "Rutina de 30 minutos",
     category: "Salud",
-    status: Status.completed,
     status: Status.completed,
   },
 ];
@@ -56,7 +53,6 @@ export default function Layout() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
-  const [status, setStatus] = useState<Status>(Status.pending);
   const [status, setStatus] = useState<Status>(Status.pending);
 
   const getTasksByStatus = (status: Status) =>
@@ -78,7 +74,6 @@ export default function Layout() {
     setTitle("");
     setDescription("");
     setCategory("");
-    setStatus(Status.pending);
     setStatus(Status.pending);
     setShowForm(false);
   };
