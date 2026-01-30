@@ -1,27 +1,9 @@
 import { useState } from "react";
-import Column from "../components/Column";
+import Board from "../components/Board";
+import TaskModal from "../components/TaskModal";
+import type { Task } from "../types/task";
+import { Status } from "../types/task";
 
-/*
-   TIPOS
-*/
-export enum Status {
-  pending = "Por hacer",
-  in_progress = "En progreso",
-  completed = "Finalizado",
-}
-
-export interface Task {
-  id: number;
-  title: string;
-  description: string;
-  category: string;
-  status: Status;
-  priority?: string;
-}
-
-/* 
-   DATA INICIAL
-*/
 const initialTasks: Task[] = [
   {
     id: 1,
@@ -48,113 +30,36 @@ const initialTasks: Task[] = [
 
 export default function Layout() {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
-  const [showForm, setShowForm] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
-  const [status, setStatus] = useState<Status>(Status.pending);
+  const openTask = (task: Task) => setSelectedTask(task);
+  const closeTask = () => setSelectedTask(null);
 
-  const getTasksByStatus = (status: Status) =>
-    tasks.filter((task) => task.status === status);
-
-  const addTask = () => {
-    if (!title || !description || !category) return;
-
-    const newTask: Task = {
-      id: Date.now(),
-      title,
-      description,
-      category,
-      status,
-    };
-
-    setTasks([...tasks, newTask]);
-
-    setTitle("");
-    setDescription("");
-    setCategory("");
-    setStatus(Status.pending);
-    setShowForm(false);
+  const changeStatus = (id: number, status: Status) => {
+    setTasks(tasks.map((t) => (t.id === id ? { ...t, status } : t)));
   };
 
   return (
     <div style={styles.app}>
-      {/* HEADER */}
       <header style={styles.header}>
         <h1 style={styles.title}>🗂️ Gestor de Tareas</h1>
         <p style={styles.subtitle}>Organiza tus tareas para avanzar</p>
-
-        <button onClick={() => setShowForm(!showForm)}>➕ Añadir tarea</button>
       </header>
 
-      {/* FORMULARIO */}
-      {showForm && (
-        <div style={{ padding: "1rem" }}>
-          <input
-            placeholder="Título"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
+      <Board
+        tasks={tasks}
+        styles={styles}
+        onOpen={openTask}
+        onStatusChange={changeStatus}
+      />
 
-          <input
-            placeholder="Descripción"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-
-          <input
-            placeholder="Categoría"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          />
-
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as Status)}
-          >
-            <option value={Status.pending}>Por hacer</option>
-            <option value={Status.in_progress}>En progreso</option>
-            <option value={Status.completed}>Finalizado</option>
-          </select>
-
-          <button onClick={addTask}>Guardar tarea</button>
-        </div>
-      )}
-
-      {/* BODY */}
-      <main style={styles.board}>
-        <Column
-          title="Por hacer"
-          color="#3b82f6"
-          tasks={getTasksByStatus(Status.pending)}
-          styles={styles}
-        />
-
-        <Column
-          title="En progreso"
-          color="#f59e0b"
-          tasks={getTasksByStatus(Status.in_progress)}
-          styles={styles}
-        />
-
-        <Column
-          title="Finalizado"
-          color="#22c55e"
-          tasks={getTasksByStatus(Status.completed)}
-          styles={styles}
-        />
-      </main>
-
-      <footer style={styles.footer}>
-        <span>© 2026 · Gestor de Tareas</span>
-      </footer>
+      {selectedTask && <TaskModal task={selectedTask} onClose={closeTask} />}
     </div>
   );
 }
 
 /* =======================
-   ESTILOS 
+   ESTILOS
 ======================= */
 
 const styles: { [key: string]: React.CSSProperties } = {
@@ -178,6 +83,13 @@ const styles: { [key: string]: React.CSSProperties } = {
     marginTop: "0.5rem",
     opacity: 0.9,
   },
+  form: {
+    padding: "1rem",
+    display: "flex",
+    gap: "0.5rem",
+    flexWrap: "wrap",
+    justifyContent: "center",
+  },
   board: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
@@ -188,7 +100,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     backgroundColor: "#053d63ff",
     borderRadius: "12px",
     padding: "1rem",
-    boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
     display: "flex",
     flexDirection: "column",
   },
@@ -213,22 +124,20 @@ const styles: { [key: string]: React.CSSProperties } = {
     backgroundColor: "#061744ff",
     borderRadius: "10px",
     padding: "1rem",
-    boxShadow: "0 4px 10px rgba(0,0,0,0.06)",
+    cursor: "pointer",
   },
   cardTitle: {
     margin: 0,
     fontSize: "1.1rem",
-    marginBottom: "0.5rem",
   },
   cardDescription: {
-    margin: 0,
-    fontSize: "0.95rem",
-    color: "#475569",
-    marginBottom: "0.75rem",
+    fontSize: "0.9rem",
+    opacity: 0.85,
   },
   cardFooter: {
     display: "flex",
     justifyContent: "space-between",
+    alignItems: "center",
   },
   category: {
     fontSize: "0.75rem",
