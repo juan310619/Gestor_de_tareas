@@ -5,9 +5,9 @@ export enum Status {
 }
 
 export const STATUS_LABELS: Record<Status, string> = {
-  pending: "Por hacer",
-  in_progress: "En progreso",
-  completed: "Finalizado",
+  [Status.pending]: "Por hacer",
+  [Status.in_progress]: "En progreso",
+  [Status.completed]: "Finalizado",
 };
 
 export interface Task {

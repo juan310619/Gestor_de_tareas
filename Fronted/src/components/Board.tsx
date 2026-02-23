@@ -1,7 +1,6 @@
 import Column from "./Column";
 import type { Task } from "../types/task";
 import { Status } from "../types/task";
-import { STATUS_LABELS } from "../types/task";
 
 interface Props {
   tasks: Task[];
@@ -16,32 +15,34 @@ export default function Board({
   onOpen,
   onStatusChange,
 }: Props) {
-  const byStatus = (status: Status) => tasks.filter((t) => t.status === status);
+  const pending = tasks.filter((t) => t.status === Status.pending);
+  const progress = tasks.filter((t) => t.status === Status.in_progress);
+  const completed = tasks.filter((t) => t.status === Status.completed);
 
   return (
     <main style={styles.board}>
       <Column
-        title={STATUS_LABELS[Status.pending]}
-        color="#3b82f6"
-        tasks={byStatus(Status.pending)}
+        title="Por hacer"
+        status={Status.pending}
+        tasks={pending}
         styles={styles}
         onOpen={onOpen}
         onStatusChange={onStatusChange}
       />
 
       <Column
-        title={STATUS_LABELS[Status.in_progress]}
-        color="#f59e0b"
-        tasks={byStatus(Status.in_progress)}
+        title="En progreso"
+        status={Status.in_progress}
+        tasks={progress}
         styles={styles}
         onOpen={onOpen}
         onStatusChange={onStatusChange}
       />
 
       <Column
-        title={STATUS_LABELS[Status.completed]}
-        color="#22c55e"
-        tasks={byStatus(Status.completed)}
+        title="Finalizado"
+        status={Status.completed}
+        tasks={completed}
         styles={styles}
         onOpen={onOpen}
         onStatusChange={onStatusChange}

@@ -1,11 +1,12 @@
+import { useDroppable } from "@dnd-kit/core";
 import type { Task } from "../types/task";
 import { Status } from "../types/task";
 import TaskCard from "./TaskCard";
 
-interface ColumnProps {
+interface Props {
   title: string;
+  status: Status;
   tasks: Task[];
-  color: string;
   styles: any;
   onOpen: (task: Task) => void;
   onStatusChange: (id: number, status: Status) => void;
@@ -13,15 +14,19 @@ interface ColumnProps {
 
 export default function Column({
   title,
+  status,
   tasks,
-  color,
   styles,
   onOpen,
   onStatusChange,
-}: ColumnProps) {
+}: Props) {
+  const { setNodeRef } = useDroppable({
+    id: status,
+  });
+
   return (
-    <section style={styles.column}>
-      <h2 style={{ ...styles.columnTitle, borderColor: color }}>
+    <section ref={setNodeRef} style={styles.column}>
+      <h2 style={styles.columnTitle}>
         {title}
         <span style={styles.count}>{tasks.length}</span>
       </h2>

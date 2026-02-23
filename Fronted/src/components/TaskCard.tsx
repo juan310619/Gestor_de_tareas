@@ -1,46 +1,62 @@
+import { useRef } from "react";
+import { useDraggable } from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
 import type { Task } from "../types/task";
-import { Status } from "../types/task";
-import { STATUS_LABELS } from "../types/task";
 
 interface Props {
   task: Task;
   styles: any;
   onOpen: (task: Task) => void;
-  onStatusChange: (id: number, status: Status) => void;
+  onStatusChange: (id: number, status: any) => void;
 }
 
-export default function TaskCard({
-  task,
-  styles,
-  onOpen,
-  onStatusChange,
-}: Props) {
-  return (
-    <div style={styles.card}>
-      {/* ZONA CLICK */}
-      <div onClick={() => onOpen(task)} style={{ cursor: "pointer" }}>
-        <h3 style={styles.cardTitle}>{task.title}</h3>
-        <p style={styles.cardDescription}>{task.description}</p>
-      </div>
+export default function TaskCard({ task, styles, onOpen }: Props) {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: task.id.toString(),
+  });
 
-      {/* FOOTER */}
+  const startPos = useRef<{ x: number; y: number } | null>(null);
+  const moved = useRef(false);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    startPos.current = { x: e.clientX, y: e.clientY };
+    moved.current = false;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!startPos.current) return;
+    const dx = Math.abs(e.clientX - startPos.current.x);
+    const dy = Math.abs(e.clientY - startPos.current.y);
+
+    if (dx > 5 || dy > 5) moved.current = true;
+  };
+
+  const handleMouseUp = () => {
+    if (!moved.current) {
+      onOpen(task);
+    }
+    startPos.current = null;
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        ...styles.card,
+        transform: CSS.Translate.toString(transform),
+        cursor: "grab",
+      }}
+      {...listeners}
+      {...attributes}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+    >
+      <h3 style={styles.cardTitle}>{task.title}</h3>
+      <p style={styles.cardDescription}>{task.description}</p>
+
       <div style={styles.cardFooter}>
         <span style={styles.category}>{task.category}</span>
-
-        <select
-          value={task.status}
-          onChange={(e) => onStatusChange(task.id, e.target.value as Status)}
-        >
-          <option value={Status.pending}>
-            {STATUS_LABELS[Status.pending]}
-          </option>
-          <option value={Status.in_progress}>
-            {STATUS_LABELS[Status.in_progress]}
-          </option>
-          <option value={Status.completed}>
-            {STATUS_LABELS[Status.completed]}
-          </option>
-        </select>
       </div>
     </div>
   );

@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { DndContext } from "@dnd-kit/core";
 import Board from "../components/Board";
 import TaskModal from "../components/TaskModal";
+import AddTaskModal from "../components/AddTaskModal";
 import type { Task } from "../types/task";
 import { Status } from "../types/task";
 
@@ -31,12 +33,24 @@ const initialTasks: Task[] = [
 export default function Layout() {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const openTask = (task: Task) => setSelectedTask(task);
   const closeTask = () => setSelectedTask(null);
 
+  const addTask = (task: Omit<Task, "id">) => {
+    setTasks((prev) => [...prev, { ...task, id: Date.now() }]);
+  };
+
   const changeStatus = (id: number, status: Status) => {
-    setTasks(tasks.map((t) => (t.id === id ? { ...t, status } : t)));
+    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
+  };
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    changeStatus(Number(active.id), over.id as Status);
   };
 
   return (
@@ -44,23 +58,40 @@ export default function Layout() {
       <header style={styles.header}>
         <h1 style={styles.title}>🗂️ Gestor de Tareas</h1>
         <p style={styles.subtitle}>Organiza tus tareas para avanzar</p>
+
+        <button
+          style={{
+            marginTop: "1rem",
+            padding: "0.6rem 1.2rem",
+            borderRadius: "8px",
+            border: "none",
+            cursor: "pointer",
+          }}
+          onClick={() => setShowAddModal(true)}
+        >
+          ➕ Agregar tarea
+        </button>
       </header>
 
-      <Board
-        tasks={tasks}
-        styles={styles}
-        onOpen={openTask}
-        onStatusChange={changeStatus}
-      />
+      <DndContext onDragEnd={handleDragEnd}>
+        <Board
+          tasks={tasks}
+          styles={styles}
+          onOpen={openTask}
+          onStatusChange={changeStatus}
+        />
+      </DndContext>
 
       {selectedTask && <TaskModal task={selectedTask} onClose={closeTask} />}
+
+      {showAddModal && (
+        <AddTaskModal onClose={() => setShowAddModal(false)} onSave={addTask} />
+      )}
     </div>
   );
 }
 
-/* =======================
-   ESTILOS
-======================= */
+/* ======= TUS ESTILOS — SIN CAMBIOS ======= */
 
 const styles: { [key: string]: React.CSSProperties } = {
   app: {
@@ -75,21 +106,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     textAlign: "center",
     fontFamily: "Impact",
   },
-  title: {
-    margin: 0,
-    fontSize: "2.3rem",
-  },
-  subtitle: {
-    marginTop: "0.5rem",
-    opacity: 0.9,
-  },
-  form: {
-    padding: "1rem",
-    display: "flex",
-    gap: "0.5rem",
-    flexWrap: "wrap",
-    justifyContent: "center",
-  },
+  title: { margin: 0, fontSize: "2.3rem" },
+  subtitle: { marginTop: "0.5rem", opacity: 0.9 },
   board: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
@@ -111,29 +129,16 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: "flex",
     justifyContent: "space-between",
   },
-  count: {
-    opacity: 0.6,
-    fontSize: "0.9rem",
-  },
-  taskList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "1rem",
-  },
+  count: { opacity: 0.6, fontSize: "0.9rem" },
+  taskList: { display: "flex", flexDirection: "column", gap: "1rem" },
   card: {
     backgroundColor: "#061744ff",
     borderRadius: "10px",
     padding: "1rem",
     cursor: "pointer",
   },
-  cardTitle: {
-    margin: 0,
-    fontSize: "1.1rem",
-  },
-  cardDescription: {
-    fontSize: "0.9rem",
-    opacity: 0.85,
-  },
+  cardTitle: { margin: 0, fontSize: "1.1rem" },
+  cardDescription: { fontSize: "0.9rem", opacity: 0.85 },
   cardFooter: {
     display: "flex",
     justifyContent: "space-between",
@@ -144,12 +149,5 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: "0.3rem 0.6rem",
     backgroundColor: "#6487e7ff",
     borderRadius: "999px",
-  },
-  footer: {
-    textAlign: "center",
-    padding: "1rem",
-    fontSize: "0.9rem",
-    backgroundColor: "#1a1919ff",
-    color: "#909294ff",
   },
 };

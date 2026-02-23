@@ -1,5 +1,5 @@
 import type { Task } from "../types/task";
-import { Status } from "../types/task";
+
 import { STATUS_LABELS } from "../types/task";
 
 interface Props {
