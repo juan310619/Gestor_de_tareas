@@ -24,6 +24,7 @@ from sqlmodel import SQLModel
 # Importar modelos para que Alembic los detecte
 from app.models.user_model import User
 from app.models.tasks_model import Task
+from app.models.projects_model import Project
 
 # Alembic config
 config = context.config

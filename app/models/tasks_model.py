@@ -1,3 +1,4 @@
+# ...existing code...
 from datetime import datetime, timezone
 from sqlmodel import Field, SQLModel, Relationship
 from typing import Optional
@@ -16,11 +17,9 @@ class TaskBase(SQLModel):
     completed_at: Optional[datetime] = Field(default=None, nullable=True)
     priority: Optional[str] = Field(default=None, nullable=True)
     user_id: Optional[int] = Field(default=None, foreign_key="users.id")
+    project_id: Optional[int] = Field(default=None, foreign_key="projects.id")
 
 class Task(TaskBase, table=True):
     __tablename__ = "tasks"
     user: Optional["User"] = Relationship(back_populates="tasks")  # referencia diferida
-
-
-
-
+    project: Optional["Project"] = Relationship(back_populates="tasks")
