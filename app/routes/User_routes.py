@@ -39,9 +39,9 @@ def get_user(
 
 
 
-#obtener lista de usuarios
+#obtener lista de usuarios (solo administradores)
 @router.get("/users", response_model=list[UserRead])
-def get_users(current_user: UserRead = Depends(get_current_user), db:Session=Depends(get_db)):
+def get_users(current_user = Depends(admin_required), db:Session=Depends(get_db)):
     users = crud.get_users(db)
     if not users:
         raise HTTPException(status_code=404, detail="not user existing")
