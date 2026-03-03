@@ -1,4 +1,4 @@
-import React from "react";
+import "../styles/home.css";
 
 /*
    TIPOS
@@ -39,27 +39,44 @@ const presentationList: Presentation[] = [
 
 export default function Home() {
   return (
-    <div style={styles.app}>
-      {/* HEADER */}
-      <header style={styles.header}>
-        <h1 style={styles.title}>🗂️ Gestor de Tareas</h1>
-        <p style={styles.subtitle}>Organiza, avanza y finaliza tus objetivos</p>
+    <div className="home-app">
+      {/* NAVBAR */}
+      <nav className="home-navbar">
+        <div className="navbar-content">
+          <div className="navbar-logo">📋 TaskFlow</div>
+          <div className="navbar-buttons">
+            <button className="navbar-login-btn">Iniciar sesión</button>
+            <button className="navbar-register-btn">Registrarse</button>
+          </div>
+        </div>
+      </nav>
 
-        <div style={styles.headerButtons}>
-          <button style={styles.loginBtn}>Iniciar sesión</button>
-          <button style={styles.registerBtn}>Registrarse</button>
+      {/* HERO SECTION */}
+      <header className="home-hero">
+        <div className="hero-overlay"></div>
+        <div className="hero-content">
+          <h1 className="home-title">Domina tu Productividad</h1>
+          <p className="home-subtitle">
+            La herramienta perfecta para organizar tus proyectos, tareas y metas
+          </p>
+          <p className="home-tagline">Simple. Poderosa. Transformadora.</p>
+
+          <div className="home-header-buttons">
+            <button className="hero-primary-btn">Comenzar Ahora 🚀</button>
+            <button className="hero-secondary-btn">Conocer Más</button>
+          </div>
         </div>
       </header>
 
       {/* BODY */}
-      <main style={styles.board}>
+      <main className="home-board">
         {presentationList.map((item) => (
           <PresentationCard key={item.id} item={item} />
         ))}
       </main>
 
       {/* FOOTER */}
-      <footer style={styles.footer}>
+      <footer className="home-footer">
         <span>© 2026 · Gestor de Tareas</span>
       </footer>
     </div>
@@ -72,117 +89,12 @@ export default function Home() {
 
 function PresentationCard({ item }: { item: Presentation }) {
   return (
-    <section style={styles.card}>
-      <img src={item.image} alt={item.headline} style={styles.cardImage} />
-
-      <h2 style={styles.cardTitle}>{item.headline}</h2>
-
-      <p style={styles.cardDescription}>{item.description}</p>
+    <section className="home-card">
+      <img src={item.image} alt={item.headline} className="home-card-image" />
+      <div className="home-card-content">
+        <h2 className="home-card-title">{item.headline}</h2>
+        <p className="home-card-description">{item.description}</p>
+      </div>
     </section>
   );
 }
-
-/* =======================
-   ESTILOS
-======================= */
-
-const styles: { [key: string]: React.CSSProperties } = {
-  app: {
-    minHeight: "100vh",
-    backgroundColor: "#242424ff",
-    fontFamily: "Arial, sans-serif",
-    display: "flex",
-    flexDirection: "column",
-  },
-
-  header: {
-    padding: "2.5rem",
-    backgroundColor: "#000000ff",
-    color: "#ffffff",
-    textAlign: "center",
-  },
-
-  title: {
-    margin: 0,
-    fontSize: "2.4rem",
-    fontFamily: "Impact",
-  },
-
-  subtitle: {
-    marginTop: "0.5rem",
-    opacity: 0.85,
-  },
-
-  headerButtons: {
-    marginTop: "1.5rem",
-    display: "flex",
-    justifyContent: "center",
-    gap: "1rem",
-  },
-
-  loginBtn: {
-    padding: "0.6rem 1.2rem",
-    backgroundColor: "#3b82f6",
-    color: "#fff",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
-  },
-
-  registerBtn: {
-    padding: "0.6rem 1.2rem",
-    backgroundColor: "#22c55e",
-    color: "#fff",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
-  },
-
-  board: {
-    flex: 1,
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-    gap: "2rem",
-    padding: "2.5rem",
-  },
-
-  card: {
-    backgroundColor: "#053d63ff",
-    borderRadius: "14px",
-    padding: "1.5rem",
-    boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
-    display: "flex",
-    flexDirection: "column",
-    gap: "1rem",
-  },
-
-  cardImage: {
-    width: "100%",
-    height: "160px",
-    objectFit: "cover",
-    borderRadius: "10px",
-  },
-
-  cardTitle: {
-    margin: 0,
-    fontSize: "1.4rem",
-    textAlign: "center",
-    letterSpacing: "2px",
-  },
-
-  cardDescription: {
-    margin: 0,
-    fontSize: "0.95rem",
-    lineHeight: 1.5,
-    textAlign: "justify",
-    color: "#d1d5db",
-  },
-
-  footer: {
-    textAlign: "center",
-    padding: "1rem",
-    backgroundColor: "#1a1919ff",
-    color: "#909294ff",
-    fontSize: "0.9rem",
-  },
-};
