@@ -7,6 +7,7 @@ interface Props {
   styles: any;
   onOpen: (task: Task) => void;
   onStatusChange: (id: number, status: Status) => void;
+  onDelete: (id: number) => void;
 }
 
 export default function Board({
@@ -14,6 +15,7 @@ export default function Board({
   styles,
   onOpen,
   onStatusChange,
+  onDelete,
 }: Props) {
   const pending = tasks.filter((t) => t.status === Status.pending);
   const progress = tasks.filter((t) => t.status === Status.in_progress);
@@ -28,6 +30,7 @@ export default function Board({
         styles={styles}
         onOpen={onOpen}
         onStatusChange={onStatusChange}
+        onDelete={onDelete}
       />
 
       <Column
@@ -37,6 +40,7 @@ export default function Board({
         styles={styles}
         onOpen={onOpen}
         onStatusChange={onStatusChange}
+        onDelete={onDelete}
       />
 
       <Column
@@ -46,6 +50,7 @@ export default function Board({
         styles={styles}
         onOpen={onOpen}
         onStatusChange={onStatusChange}
+        onDelete={onDelete}
       />
     </main>
   );

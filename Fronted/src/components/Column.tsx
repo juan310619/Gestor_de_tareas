@@ -10,6 +10,7 @@ interface Props {
   styles: any;
   onOpen: (task: Task) => void;
   onStatusChange: (id: number, status: Status) => void;
+  onDelete: (id: number) => void;
 }
 
 export default function Column({
@@ -19,15 +20,24 @@ export default function Column({
   styles,
   onOpen,
   onStatusChange,
+  onDelete,
 }: Props) {
   const { setNodeRef } = useDroppable({
     id: status,
   });
 
+  const statusIcons: Record<Status, string> = {
+    [Status.pending]: "⏳",
+    [Status.in_progress]: "⚙️",
+    [Status.completed]: "✅",
+  };
+
   return (
     <section ref={setNodeRef} style={styles.column}>
       <h2 style={styles.columnTitle}>
-        {title}
+        <span>
+          {statusIcons[status]} {title}
+        </span>
         <span style={styles.count}>{tasks.length}</span>
       </h2>
 
@@ -39,6 +49,7 @@ export default function Column({
             styles={styles}
             onOpen={onOpen}
             onStatusChange={onStatusChange}
+            onDelete={onDelete}
           />
         ))}
       </div>
