@@ -89,9 +89,22 @@ def get_tasks_by_month(db: Session, year: int, month: int, user_id: int) -> List
     return db.exec(statement).all()
 
 
+def get_tasks_without_project(db: Session, user_id: int) -> List[Task]:
+    """Obtener tareas del usuario que no tienen un proyecto asignado"""
+    statement = select(Task).where(
+        Task.user_id == user_id,
+        Task.project_id.is_(None)
+    )
+    return db.exec(statement).all()
+
+
 def create_task(db: Session, task: TaskCreate, user_id: int) -> Task:
     db_task = Task.model_validate(task)
     db_task.user_id = user_id
+    
+    # Asegurar que project_id se asigne correctamente si viene en la tarea
+    if hasattr(task, 'project_id') and task.project_id:
+        db_task.project_id = task.project_id
 
     db.add(db_task)
     db.commit()

@@ -89,6 +89,11 @@ export default function TaskCard({ task, styles, onOpen, onDelete }: Props) {
 
       <div style={styles.cardFooter}>
         <span style={styles.category}>{task.category}</span>
+        {task.dueDate && (
+          <span style={styles.dueDate}>
+            📅 {new Date(task.dueDate).toLocaleDateString("es-ES")}
+          </span>
+        )}
       </div>
     </div>
   );

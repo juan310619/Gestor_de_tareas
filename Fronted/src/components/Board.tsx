@@ -1,12 +1,11 @@
 import Column from "./Column";
 import type { Task } from "../types/task";
-import { Status } from "../types/task";
 
 interface Props {
   tasks: Task[];
   styles: any;
   onOpen: (task: Task) => void;
-  onStatusChange: (id: number, status: Status) => void;
+  onStatusChange: (id: number, status: string) => void;
   onDelete: (id: number) => void;
 }
 
@@ -17,15 +16,15 @@ export default function Board({
   onStatusChange,
   onDelete,
 }: Props) {
-  const pending = tasks.filter((t) => t.status === Status.pending);
-  const progress = tasks.filter((t) => t.status === Status.in_progress);
-  const completed = tasks.filter((t) => t.status === Status.completed);
+  const pending = tasks.filter((t) => t.status === "pending");
+  const progress = tasks.filter((t) => t.status === "in_progress");
+  const completed = tasks.filter((t) => t.status === "completed");
 
   return (
     <main style={styles.board}>
       <Column
         title="Por hacer"
-        status={Status.pending}
+        status="pending"
         tasks={pending}
         styles={styles}
         onOpen={onOpen}
@@ -35,7 +34,7 @@ export default function Board({
 
       <Column
         title="En progreso"
-        status={Status.in_progress}
+        status="in_progress"
         tasks={progress}
         styles={styles}
         onOpen={onOpen}
@@ -45,7 +44,7 @@ export default function Board({
 
       <Column
         title="Finalizado"
-        status={Status.completed}
+        status="completed"
         tasks={completed}
         styles={styles}
         onOpen={onOpen}

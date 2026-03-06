@@ -17,6 +17,11 @@ def get_db():
         db.close()
 
 
+# Obtener usuario actual
+@router.get("/me", response_model=UserRead)
+def get_current_user_info(current_user: UserRead = Depends(get_current_user)):
+    return current_user
+
 
 #ruta para crear usuario
 @router.post("/users", response_model = UserRead)

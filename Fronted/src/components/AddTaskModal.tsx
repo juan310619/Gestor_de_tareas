@@ -8,6 +8,9 @@ interface Props {
     description: string;
     category: string;
     status: Status;
+    project_id?: number;
+    priority?: string;
+    dueDate?: string;
   }) => void;
 }
 
@@ -16,13 +19,27 @@ export default function AddTaskModal({ onClose, onSave }: Props) {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState(Status.pending);
+  const [priority, setPriority] = useState("medium");
+  const [dueDate, setDueDate] = useState("");
 
   const handleSave = () => {
     if (!title.trim()) {
       alert("Por favor, ingresa un título para la tarea");
       return;
     }
-    onSave({ title, description, category, status });
+
+    // Obtener el project_id del localStorage
+    const projectId = localStorage.getItem("currentProjectId");
+
+    onSave({
+      title,
+      description,
+      category,
+      status,
+      priority,
+      dueDate,
+      project_id: projectId ? Number(projectId) : undefined,
+    });
     onClose();
   };
 
@@ -85,6 +102,31 @@ export default function AddTaskModal({ onClose, onSave }: Props) {
             </select>
           </label>
 
+          <label style={styles.label}>
+            <span style={styles.labelText}>Prioridad</span>
+            <select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value)}
+              style={styles.select}
+            >
+              <option value="low">Baja</option>
+              <option value="medium">Media</option>
+              <option value="high">Alta</option>
+            </select>
+          </label>
+
+          <label style={styles.label}>
+            <span style={styles.labelText}>
+              Fecha de Vencimiento (Opcional)
+            </span>
+            <input
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              style={styles.input}
+            />
+          </label>
+
           <div style={styles.actions}>
             <button onClick={handleSave} style={styles.saveBtn}>
               ✓ Crear Tarea
@@ -98,28 +140,6 @@ export default function AddTaskModal({ onClose, onSave }: Props) {
     </div>
   );
 }
-
-const bg = {
-  position: "fixed" as const,
-  inset: 0,
-  background: "rgba(0, 0, 0, 0.7)",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  zIndex: 1000,
-  backdropFilter: "blur(4px)",
-};
-
-const modal = {
-  background: "#1e293b",
-  borderRadius: "12px",
-  color: "#f1f5f9",
-  width: "90%",
-  maxWidth: "500px",
-  border: "1px solid #334155",
-  boxShadow: "0 20px 25px rgba(0, 0, 0, 0.3)",
-  overflow: "hidden",
-};
 
 const styles: { [key: string]: React.CSSProperties } = {
   bg: {
@@ -141,7 +161,10 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: "1px solid #334155",
     boxShadow: "0 20px 25px rgba(0, 0, 0, 0.3)",
     overflow: "hidden",
-  },
+    display: "flex",
+    flexDirection: "column",
+    maxHeight: "90vh",
+  } as React.CSSProperties,
   header: {
     padding: "1.5rem",
     borderBottom: "1px solid #334155",
@@ -149,6 +172,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "#0f172a",
+    flexShrink: 0,
   },
   title: {
     margin: 0,
@@ -172,7 +196,9 @@ const styles: { [key: string]: React.CSSProperties } = {
   } as React.CSSProperties,
   content: {
     padding: "1.5rem",
-  },
+    overflowY: "auto",
+    flex: 1,
+  } as React.CSSProperties,
   label: {
     display: "flex",
     flexDirection: "column",

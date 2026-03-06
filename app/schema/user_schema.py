@@ -3,14 +3,18 @@ from typing import Optional,Union
 
 #  Base: campos comunes entre todos los esquemas
 class UserBase(BaseModel): 
-    first_name: str
-    last_name: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     email: str
     username: str
 
 #  Crear: hereda de UserBase y agrega la contraseña
-class UserCreate(UserBase):
+class UserCreate(BaseModel):
+    username: str
+    email: str
     password: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
 
 #  Actualizar: permite opcionales (por si el usuario actualiza solo un campo)
 class UserUpdate(BaseModel):

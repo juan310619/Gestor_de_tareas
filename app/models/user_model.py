@@ -1,14 +1,14 @@
+from __future__ import annotations
 from datetime import datetime, timezone
-from sqlmodel import Field, SQLModel, Relationship
-from typing import Optional, List
-from app.models.tasks_model import Task  
+from sqlmodel import Field, SQLModel
+from typing import Optional
 
 class UserBase(SQLModel):
 
 
     id: Optional[int] = Field(default=None, primary_key=True, index=True, nullable=False)
-    first_name: str = Field(nullable=False)
-    last_name: str = Field(nullable=False)
+    first_name: Optional[str] = Field(default=None, nullable=True)
+    last_name: Optional[str] = Field(default=None, nullable=True)
     username: str = Field(nullable=False, unique=True)
     email: str = Field(nullable=False, unique=True)
     password: str = Field(nullable=False)
@@ -21,4 +21,4 @@ class UserBase(SQLModel):
 
 class User(UserBase, table=True):
     __tablename__ = "users"
-    tasks: List[Task] = Relationship(back_populates="user")
+    pass

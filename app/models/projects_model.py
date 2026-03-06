@@ -1,6 +1,7 @@
+from __future__ import annotations
 from datetime import datetime, timezone
-from sqlmodel import Field, SQLModel, Relationship
-from typing import Optional, List
+from sqlmodel import Field, SQLModel
+from typing import Optional
 
 class ProjectBase(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True, index=True, nullable=False)
@@ -12,4 +13,4 @@ class ProjectBase(SQLModel):
 
 class Project(ProjectBase, table=True):
     __tablename__ = "projects"
-    tasks: List["Task"] = Relationship(back_populates="project")
+    pass

@@ -1,76 +1,198 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DndContext } from "@dnd-kit/core";
 import Board from "../components/Board";
 import TaskModal from "../components/TaskModal";
 import AddTaskModal from "../components/AddTaskModal";
 import type { Task } from "../types/task";
-import { Status } from "../types/task";
+import { convertTaskReadToTask } from "../types/task";
+import { apiService } from "../services/api";
 import "../styles/layout.css";
 
-const initialTasks: Task[] = [
-  {
-    id: 1,
-    title: "Estudiar React",
-    description: "Repasar componentes, props y estado",
-    category: "Estudio",
-    status: Status.pending,
-  },
-  {
-    id: 2,
-    title: "Repasar TypeScript",
-    description: "Tipos, interfaces y generics",
-    category: "Estudio",
-    status: Status.in_progress,
-  },
-  {
-    id: 3,
-    title: "Hacer ejercicio",
-    description: "Rutina de 30 minutos",
-    category: "Salud",
-    status: Status.completed,
-  },
-];
-
 export default function Layout() {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentProjectId, setCurrentProjectId] = useState<number | null>(null);
+  const [projectName, setProjectName] = useState<string>("Mis Tareas");
+
+  // Cargar tareas al montar
+  useEffect(() => {
+    checkAuth();
+    const projectId = localStorage.getItem("currentProjectId");
+    if (projectId) {
+      setCurrentProjectId(Number(projectId));
+    }
+    loadTasks();
+  }, []);
+
+  // Cargar nombre del proyecto
+  useEffect(() => {
+    if (currentProjectId) {
+      loadProjectName();
+    }
+  }, [currentProjectId]);
+
+  // Obtener el nombre del proyecto desde el backend
+  const loadProjectName = async () => {
+    try {
+      const projectId = Number(localStorage.getItem("currentProjectId"));
+      const response = await apiService.getProject(projectId);
+      setProjectName(response.name);
+    } catch (err) {
+      console.error("Error al cargar nombre del proyecto:", err);
+    }
+  };
+
+  // Verificar autenticación
+  const checkAuth = () => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      window.location.href = "/";
+      return;
+    }
+    setIsLoggedIn(true);
+  };
+
+  // Cargar tareas del backend
+  const loadTasks = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const projectId = Number(localStorage.getItem("currentProjectId"));
+      const tasksData = await apiService.getMyTasks();
+
+      // Convertir TaskRead a Task y filtrar por proyecto
+      const convertedTasks = tasksData.map(convertTaskReadToTask);
+      const filteredTasks = projectId
+        ? convertedTasks.filter((t) => t.project_id === projectId)
+        : convertedTasks;
+
+      setTasks(filteredTasks);
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error ? err.message : "Error al cargar tareas";
+      setError(errorMsg);
+      console.error("Error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const openTask = (task: Task) => setSelectedTask(task);
   const closeTask = () => setSelectedTask(null);
 
-  const addTask = (task: Omit<Task, "id">) => {
-    setTasks((prev) => [...prev, { ...task, id: Date.now() }]);
+  // Agregar tarea nueva
+  const addTask = async (taskData: Omit<Task, "id">) => {
+    try {
+      setError("");
+      const newTaskRead = await apiService.createTask(
+        taskData.title,
+        taskData.description,
+        taskData.category,
+        taskData.status,
+        taskData.priority || "medium",
+        taskData.project_id,
+        taskData.dueDate,
+      );
+      const newTask = convertTaskReadToTask(newTaskRead);
+      setTasks((prev) => [...prev, newTask]);
+      setShowAddModal(false);
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error ? err.message : "Error al crear tarea";
+      setError(errorMsg);
+      console.error("Error:", err);
+    }
   };
 
-  const updateTask = (id: number, updates: Partial<Task>) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, ...updates } : t)),
-    );
-    closeTask();
+  // Actualizar tarea
+  const updateTask = async (id: number, updates: Partial<Task>) => {
+    try {
+      setError("");
+      const updatedRead = await apiService.updateTask(id, updates);
+      const updatedTask = convertTaskReadToTask(updatedRead);
+      setTasks((prev) => prev.map((t) => (t.id === id ? updatedTask : t)));
+      closeTask();
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error ? err.message : "Error al actualizar tarea";
+      setError(errorMsg);
+      console.error("Error:", err);
+    }
   };
 
-  const deleteTask = (id: number) => {
-    setTasks((prev) => prev.filter((t) => t.id !== id));
-    closeTask();
+  // Eliminar tarea
+  const deleteTask = async (id: number) => {
+    try {
+      setError("");
+      await apiService.deleteTask(id);
+      setTasks((prev) => prev.filter((t) => t.id !== id));
+      closeTask();
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error ? err.message : "Error al eliminar tarea";
+      setError(errorMsg);
+      console.error("Error:", err);
+    }
   };
 
-  const changeStatus = (id: number, status: Status) => {
-    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
+  // Cambiar estado de tarea
+  const changeStatus = async (id: number, status: string) => {
+    try {
+      setError("");
+      await apiService.updateTaskStatus(id, status);
+      setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error ? err.message : "Error al cambiar estado";
+      setError(errorMsg);
+      console.error("Error:", err);
+    }
   };
 
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
     if (!over) return;
 
-    changeStatus(Number(active.id), over.id as Status);
+    changeStatus(Number(active.id), over.id as string);
   };
+
+  const handleLogout = () => {
+    apiService.logout();
+    window.location.href = "/";
+  };
+
+  if (!isLoggedIn) {
+    return <div className="layout-loading">Cargando...</div>;
+  }
 
   return (
     <div className="layout-app">
+      {/* NAVBAR */}
+      <nav className="layout-navbar">
+        <div className="navbar-left">
+          <h1 className="navbar-logo">📋 TaskFlow</h1>
+          <button
+            className="btn-back-dashboard"
+            onClick={() => (window.location.href = "/dashboard")}
+            title="Volver al dashboard"
+          >
+            ← Mis Proyectos
+          </button>
+        </div>
+        <div className="navbar-right">
+          <button className="btn-logout" onClick={handleLogout}>
+            Cerrar sesión
+          </button>
+        </div>
+      </nav>
+
       <header className="layout-header">
         <div className="layout-header-content">
-          <h1 className="layout-title">📋 Gestor de Tareas</h1>
+          <h1 className="layout-title">📋 {projectName}</h1>
           <p className="layout-subtitle">
             Organiza y gestiona tus tareas de forma profesional
           </p>
@@ -79,20 +201,42 @@ export default function Layout() {
         <button
           className="layout-add-button"
           onClick={() => setShowAddModal(true)}
+          disabled={loading}
         >
           ✨ Nueva Tarea
         </button>
       </header>
 
-      <DndContext onDragEnd={handleDragEnd}>
-        <Board
-          tasks={tasks}
-          styles={getLayoutStyles()}
-          onOpen={openTask}
-          onStatusChange={changeStatus}
-          onDelete={deleteTask}
-        />
-      </DndContext>
+      {/* ERROR MESSAGE */}
+      {error && (
+        <div className="error-banner">
+          <span>{error}</span>
+          <button className="btn-close-error" onClick={() => setError("")}>
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* LOADING STATE */}
+      {loading && (
+        <div className="loading-state">
+          <div className="spinner"></div>
+          <p>Cargando tus tareas...</p>
+        </div>
+      )}
+
+      {/* BOARD */}
+      {!loading && (
+        <DndContext onDragEnd={handleDragEnd}>
+          <Board
+            tasks={tasks}
+            styles={getLayoutStyles()}
+            onOpen={openTask}
+            onStatusChange={changeStatus}
+            onDelete={deleteTask}
+          />
+        </DndContext>
+      )}
 
       {selectedTask && (
         <TaskModal
@@ -187,6 +331,14 @@ function getLayoutStyles(): { [key: string]: React.CSSProperties } {
       fontWeight: 600,
       padding: "0.35rem 0.75rem",
       backgroundColor: "#3b82f6",
+      color: "#fff",
+      borderRadius: "999px",
+    },
+    dueDate: {
+      fontSize: "0.75rem",
+      fontWeight: 600,
+      padding: "0.35rem 0.75rem",
+      backgroundColor: "#f59e0b",
       color: "#fff",
       borderRadius: "999px",
     },

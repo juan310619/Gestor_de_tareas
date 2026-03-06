@@ -60,10 +60,15 @@ def get_user_by_id(db:Session,user_id: int) -> Optional[User]:
     return user
 
 def create_user(db: Session, user: UserCreate) -> User:
-    print("PASSWORD TYPE:", type(user.password), "VALUE:", user.password)
     hashed_password = get_password_hash(user.password)
-    user.password = hashed_password
-    db_user = User.model_validate(user)
+    db_user = User(
+        username=user.username,
+        email=user.email,
+        password=hashed_password,
+        first_name=user.first_name or "",  # Usar cadena vacía si es None
+        last_name=user.last_name or "",    # Usar cadena vacía si es None
+        is_active=True
+    )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)

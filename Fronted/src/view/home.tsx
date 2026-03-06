@@ -1,3 +1,7 @@
+import { useState } from "react";
+import LoginModal from "../components/LoginModal";
+import RegisterModal from "../components/RegisterModal";
+import ProfileModal from "../components/ProfileModal";
 import "../styles/home.css";
 
 /*
@@ -38,15 +42,90 @@ const presentationList: Presentation[] = [
 ];
 
 export default function Home() {
+  const [showLogin, setShowLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+
+  const handleLoginSuccess = () => {
+    setShowLogin(false);
+    // Redirigir a dashboard después de 1 segundo
+    setTimeout(() => {
+      window.location.href = "/dashboard";
+    }, 1000);
+  };
+
+  const handleRegisterSuccess = () => {
+    setShowRegister(false);
+    // Mostrar modal de perfil después del registro
+    setShowProfile(true);
+  };
+
+  const handleProfileComplete = () => {
+    setShowProfile(false);
+    // Redirigir a dashboard después de 1 segundo
+    setTimeout(() => {
+      window.location.href = "/dashboard";
+    }, 1000);
+  };
+
+  const handleLogout = () => {
+    setShowProfile(false);
+  };
+
+  const scrollToCards = () => {
+    const element = document.querySelector(".home-board");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <div className="home-app">
+      {/* MODALES */}
+      {showLogin && (
+        <LoginModal
+          onLoginSuccess={handleLoginSuccess}
+          onToggleRegister={() => {
+            setShowLogin(false);
+            setShowRegister(true);
+          }}
+        />
+      )}
+
+      {showRegister && (
+        <RegisterModal
+          onRegisterSuccess={handleRegisterSuccess}
+          onToggleLogin={() => {
+            setShowRegister(false);
+            setShowLogin(true);
+          }}
+        />
+      )}
+
+      {showProfile && (
+        <ProfileModal
+          onProfileComplete={handleProfileComplete}
+          onLogout={handleLogout}
+        />
+      )}
+
       {/* NAVBAR */}
       <nav className="home-navbar">
         <div className="navbar-content">
           <div className="navbar-logo">📋 TaskFlow</div>
           <div className="navbar-buttons">
-            <button className="navbar-login-btn">Iniciar sesión</button>
-            <button className="navbar-register-btn">Registrarse</button>
+            <button
+              className="navbar-login-btn"
+              onClick={() => setShowLogin(true)}
+            >
+              Iniciar sesión
+            </button>
+            <button
+              className="navbar-register-btn"
+              onClick={() => setShowRegister(true)}
+            >
+              Registrarse
+            </button>
           </div>
         </div>
       </nav>
@@ -62,8 +141,15 @@ export default function Home() {
           <p className="home-tagline">Simple. Poderosa. Transformadora.</p>
 
           <div className="home-header-buttons">
-            <button className="hero-primary-btn">Comenzar Ahora 🚀</button>
-            <button className="hero-secondary-btn">Conocer Más</button>
+            <button
+              className="hero-primary-btn"
+              onClick={() => setShowRegister(true)}
+            >
+              Comenzar Ahora 🚀
+            </button>
+            <button className="hero-secondary-btn" onClick={scrollToCards}>
+              Conocer Más
+            </button>
           </div>
         </div>
       </header>

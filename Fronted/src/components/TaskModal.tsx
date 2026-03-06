@@ -20,9 +20,10 @@ export default function TaskModal({
   const [description, setDescription] = useState(task.description);
   const [category, setCategory] = useState(task.category);
   const [status, setStatus] = useState(task.status);
+  const [dueDate, setDueDate] = useState(task.dueDate || "");
 
   const handleSave = () => {
-    onUpdate(task.id, { title, description, category, status });
+    onUpdate(task.id, { title, description, category, status, dueDate });
     setIsEditing(false);
   };
 
@@ -90,6 +91,18 @@ export default function TaskModal({
               </select>
             </label>
 
+            <label style={styles.label}>
+              <span style={styles.labelText}>
+                Fecha de Vencimiento (Opcional)
+              </span>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                style={styles.input}
+              />
+            </label>
+
             <div style={styles.formActions}>
               <button onClick={handleSave} style={styles.saveBtn}>
                 💾 Guardar Cambios
@@ -123,7 +136,18 @@ export default function TaskModal({
 
             <div style={styles.field}>
               <span style={styles.fieldLabel}>Estado</span>
-              <p style={styles.fieldValue}>{STATUS_LABELS[task.status]}</p>
+              <p style={styles.fieldValue}>
+                {STATUS_LABELS[task.status as Status]}
+              </p>
+            </div>
+
+            <div style={styles.field}>
+              <span style={styles.fieldLabel}>Fecha de Vencimiento</span>
+              <p style={styles.fieldValue}>
+                {task.dueDate
+                  ? new Date(task.dueDate).toLocaleDateString("es-ES")
+                  : "Sin fecha"}
+              </p>
             </div>
 
             <div style={styles.actions}>

@@ -1,6 +1,7 @@
 # ...existing code...
+from __future__ import annotations
 from datetime import datetime, timezone
-from sqlmodel import Field, SQLModel, Relationship
+from sqlmodel import Field, SQLModel
 from typing import Optional
 
 class TaskBase(SQLModel):
@@ -18,8 +19,8 @@ class TaskBase(SQLModel):
     priority: Optional[str] = Field(default=None, nullable=True)
     user_id: Optional[int] = Field(default=None, foreign_key="users.id")
     project_id: Optional[int] = Field(default=None, foreign_key="projects.id")
+    status: str = Field(default="pending", nullable=False)  # ✅ Agregar status: pending, in_progress, completed
 
 class Task(TaskBase, table=True):
     __tablename__ = "tasks"
-    user: Optional["User"] = Relationship(back_populates="tasks")  # referencia diferida
-    project: Optional["Project"] = Relationship(back_populates="tasks")
+    pass

@@ -1,15 +1,14 @@
 import { useDroppable } from "@dnd-kit/core";
 import type { Task } from "../types/task";
-import { Status } from "../types/task";
 import TaskCard from "./TaskCard";
 
 interface Props {
   title: string;
-  status: Status;
+  status: string;
   tasks: Task[];
   styles: any;
   onOpen: (task: Task) => void;
-  onStatusChange: (id: number, status: Status) => void;
+  onStatusChange: (id: number, status: string) => void;
   onDelete: (id: number) => void;
 }
 
@@ -26,17 +25,17 @@ export default function Column({
     id: status,
   });
 
-  const statusIcons: Record<Status, string> = {
-    [Status.pending]: "⏳",
-    [Status.in_progress]: "⚙️",
-    [Status.completed]: "✅",
+  const statusIcons: Record<string, string> = {
+    pending: "⏳",
+    in_progress: "⚙️",
+    completed: "✅",
   };
 
   return (
     <section ref={setNodeRef} style={styles.column}>
       <h2 style={styles.columnTitle}>
         <span>
-          {statusIcons[status]} {title}
+          {statusIcons[status] || "📋"} {title}
         </span>
         <span style={styles.count}>{tasks.length}</span>
       </h2>

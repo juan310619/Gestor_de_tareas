@@ -1,12 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import type { ProjectRead } from "../services/api";
+import { apiService } from "../services/api";
+import AssignTasksModal from "../components/AssignTasksModal";
 import "../styles/dashboard.css";
 
-interface Project {
-  id: number;
-  name: string;
-  description: string;
-  createdAt: string;
-  tasksCount: number;
+interface ProjectWithTasks extends ProjectRead {
+  tasksCount?: number;
 }
 
 const MOTIVATIONAL_QUOTES = [
@@ -20,90 +19,206 @@ const MOTIVATIONAL_QUOTES = [
 ];
 
 export default function Dashboard() {
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: 1,
-      name: "Proyecto Personal",
-      description: "Mis tareas personales y objetivos",
-      createdAt: "2026-01-15",
-      tasksCount: 5,
-    },
-    {
-      id: 2,
-      name: "Trabajo",
-      description: "Tareas del trabajo y reuniones",
-      createdAt: "2026-01-20",
-      tasksCount: 12,
-    },
-    {
-      id: 3,
-      name: "Estudio",
-      description: "Material de estudio y ejercicios",
-      createdAt: "2026-02-01",
-      tasksCount: 8,
-    },
-  ]);
-
+  const [projects, setProjects] = useState<ProjectWithTasks[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [showAssignTasksModal, setShowAssignTasksModal] = useState(false);
+  const [selectedProjectForAssign, setSelectedProjectForAssign] =
+    useState<ProjectWithTasks | null>(null);
+  const [editingProject, setEditingProject] = useState<ProjectWithTasks | null>(
+    null,
+  );
   const [formData, setFormData] = useState({ name: "", description: "" });
   const [currentQuote] = useState(
     MOTIVATIONAL_QUOTES[Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length)],
   );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Cargar proyectos al montar componente
+  useEffect(() => {
+    checkAuth();
+    loadProjectsAndTasks();
+  }, []);
+
+  // Cargar proyectos y luego tareas
+  const loadProjectsAndTasks = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      // Cargar proyectos y tareas en paralelo
+      const [projectsData, tasksData] = await Promise.all([
+        apiService.getMyProjects(),
+        apiService.getMyTasks(),
+      ]);
+
+      // Contar tareas por proyecto (compatibilidad con alias camelCase del backend)
+      const taskCounts: Record<number, number> = {};
+      tasksData.forEach((task: any) => {
+        // El backend devuelve campos con alias camelCase (projectId),
+        // mientras que en el frontend usamos snake_case (project_id) internamente.
+        const projectId = task.project_id ?? task.projectId;
+        if (projectId) {
+          taskCounts[projectId] = (taskCounts[projectId] || 0) + 1;
+        }
+      });
+
+      // Actualizar estado UNA SOLA VEZ con todos los datos correctos
+      setProjects(
+        projectsData.map((p) => ({
+          ...p,
+          tasksCount: taskCounts[p.id] || 0,
+        })),
+      );
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error ? err.message : "Error al cargar proyectos";
+      if (!errorMsg.includes("No projects found")) {
+        setError(errorMsg);
+        console.error("Error:", err);
+      } else {
+        setProjects([]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Verificar si el usuario está autenticado
+  const checkAuth = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        window.location.href = "/";
+        return;
+      }
+      setIsLoggedIn(true);
+    } catch (err) {
+      console.error("Error al verificar autenticación:", err);
+      window.location.href = "/";
+    }
+  };
+
+  // Funciones vacías (ahora combinadas en loadProjectsAndTasks)
+
+  // ABRIR MODAL DE ASIGNACIÓN DE TAREAS
+  const openAssignTasksModal = (project: ProjectWithTasks) => {
+    setSelectedProjectForAssign(project);
+    setShowAssignTasksModal(true);
+  };
+
+  // CERRAR MODAL DE ASIGNACIÓN Y RECARGAR PROYECTOS
+  const handleTasksAssigned = () => {
+    loadProjectsAndTasks();
+  };
 
   // CREAR PROYECTO
-  const handleCreateProject = (e: React.FormEvent) => {
+  const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) return;
 
-    const newProject: Project = {
-      id: Date.now(),
-      name: formData.name,
-      description: formData.description,
-      createdAt: new Date().toISOString().split("T")[0],
-      tasksCount: 0,
-    };
-
-    setProjects([...projects, newProject]);
-    setFormData({ name: "", description: "" });
-    setShowCreateModal(false);
+    try {
+      setError("");
+      const newProject = await apiService.createProject(
+        formData.name,
+        formData.description,
+      );
+      setProjects([...projects, { ...newProject, tasksCount: 0 }]);
+      setFormData({ name: "", description: "" });
+      setShowCreateModal(false);
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error ? err.message : "Error al crear proyecto";
+      setError(errorMsg);
+      console.error("Error:", err);
+    }
   };
 
   // ACTUALIZAR PROYECTO
-  const handleUpdateProject = (e: React.FormEvent) => {
+  const handleUpdateProject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProject || !formData.name.trim()) return;
 
-    setProjects(
-      projects.map((p) =>
-        p.id === editingProject.id
-          ? { ...p, name: formData.name, description: formData.description }
-          : p,
-      ),
-    );
+    try {
+      setError("");
+      const updated = await apiService.updateProject(
+        editingProject.id,
+        formData.name,
+        formData.description,
+      );
+      setProjects(
+        projects.map((p) =>
+          p.id === editingProject.id ? { ...p, ...updated } : p,
+        ),
+      );
 
-    setFormData({ name: "", description: "" });
-    setEditingProject(null);
-    setShowEditModal(false);
+      setFormData({ name: "", description: "" });
+      setEditingProject(null);
+      setShowEditModal(false);
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error ? err.message : "Error al actualizar proyecto";
+      setError(errorMsg);
+      console.error("Error:", err);
+    }
   };
 
   // ELIMINAR PROYECTO
-  const handleDeleteProject = (id: number) => {
+  const handleDeleteProject = async (id: number) => {
     if (confirm("¿Estás seguro de que quieres eliminar este proyecto?")) {
-      setProjects(projects.filter((p) => p.id !== id));
+      try {
+        setError("");
+        await apiService.deleteProject(id);
+        setProjects(projects.filter((p) => p.id !== id));
+      } catch (err) {
+        const errorMsg =
+          err instanceof Error ? err.message : "Error al eliminar proyecto";
+        setError(errorMsg);
+        console.error("Error:", err);
+      }
     }
   };
 
   // ABRIR MODAL DE EDICIÓN
-  const openEditModal = (project: Project) => {
+  const openEditModal = (project: ProjectWithTasks) => {
     setEditingProject(project);
     setFormData({ name: project.name, description: project.description });
     setShowEditModal(true);
   };
 
+  const handleLogout = () => {
+    apiService.logout();
+    window.location.href = "/";
+  };
+
+  // ACCEDER AL PROYECTO
+  const handleAccessProject = (projectId: number) => {
+    // Guardar el proyecto actual en localStorage para que el componente Layout lo use
+    localStorage.setItem("currentProjectId", projectId.toString());
+    // Redirigir a la página de tareas
+    window.location.href = "/tasks";
+  };
+
+  if (!isLoggedIn) {
+    return <div className="dashboard-loading">Cargando...</div>;
+  }
+
   return (
     <div className="dashboard-container">
+      {/* NAVBAR DASHBOARD */}
+      <nav className="dashboard-navbar">
+        <div className="navbar-left">
+          <h1 className="navbar-logo">📋 TaskFlow</h1>
+        </div>
+        <div className="navbar-right">
+          <button className="btn-logout" onClick={handleLogout}>
+            Cerrar sesión
+          </button>
+        </div>
+      </nav>
+
       {/* HERO SECTION */}
       <section className="dashboard-hero">
         <div className="hero-content">
@@ -118,6 +233,16 @@ export default function Dashboard() {
         </div>
       </section>
 
+      {/* ERROR MESSAGE */}
+      {error && (
+        <div className="error-banner">
+          <span>{error}</span>
+          <button className="btn-close-error" onClick={() => setError("")}>
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* HEADER */}
       <header className="dashboard-header">
         <h2 className="header-title">Tus Proyectos</h2>
@@ -127,94 +252,120 @@ export default function Dashboard() {
             setFormData({ name: "", description: "" });
             setShowCreateModal(true);
           }}
+          disabled={loading}
         >
           ➕ Nuevo Proyecto
         </button>
       </header>
 
+      {/* LOADING STATE */}
+      {loading && (
+        <div className="loading-state">
+          <div className="spinner"></div>
+          <p>Cargando tus proyectos...</p>
+        </div>
+      )}
+
       {/* CONTENIDO PRINCIPAL */}
-      <main className="dashboard-main">
-        {projects.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-illustration">
-              <span className="empty-icon">📂</span>
+      {!loading && (
+        <main className="dashboard-main">
+          {projects.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-illustration">
+                <span className="empty-icon">📂</span>
+              </div>
+              <h2>Sin proyectos aún</h2>
+              <p>
+                Comienza creando tu primer proyecto y transforma tu forma de
+                trabajar
+              </p>
+              <button
+                className="btn-empty-create"
+                onClick={() => {
+                  setFormData({ name: "", description: "" });
+                  setShowCreateModal(true);
+                }}
+              >
+                🚀 Crear Mi Primer Proyecto
+              </button>
             </div>
-            <h2>Sin proyectos aún</h2>
-            <p>
-              Comienza creando tu primer proyecto y transforma tu forma de
-              trabajar
-            </p>
-            <button
-              className="btn-empty-create"
-              onClick={() => {
-                setFormData({ name: "", description: "" });
-                setShowCreateModal(true);
-              }}
-            >
-              🚀 Crear Mi Primer Proyecto
-            </button>
-          </div>
-        ) : (
-          <>
-            <div className="projects-grid">
-              {projects.map((project) => (
-                <div key={project.id} className="project-card">
-                  <div className="card-header">
-                    <div className="card-icon">📊</div>
-                    <div className="card-actions">
-                      <button
-                        className="btn-icon edit"
-                        onClick={() => openEditModal(project)}
-                        title="Editar proyecto"
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        className="btn-icon delete"
-                        onClick={() => handleDeleteProject(project.id)}
-                        title="Eliminar proyecto"
-                      >
-                        🗑️
-                      </button>
+          ) : (
+            <>
+              <div className="projects-grid">
+                {projects.map((project) => (
+                  <div key={project.id} className="project-card">
+                    <div className="card-header">
+                      <div className="card-icon">📊</div>
+                      <div className="card-actions">
+                        <button
+                          className="btn-icon assign"
+                          onClick={() => openAssignTasksModal(project)}
+                          title="Asignar tareas al proyecto"
+                        >
+                          📌
+                        </button>
+                        <button
+                          className="btn-icon edit"
+                          onClick={() => openEditModal(project)}
+                          title="Editar proyecto"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          className="btn-icon delete"
+                          onClick={() => handleDeleteProject(project.id)}
+                          title="Eliminar proyecto"
+                        >
+                          🗑️
+                        </button>
+                      </div>
                     </div>
+
+                    <h3 className="project-name">{project.name}</h3>
+                    <p className="project-description">{project.description}</p>
+
+                    <div className="card-footer">
+                      <span className="tasks-count">
+                        📋 {project.tasksCount || 0} tareas
+                      </span>
+                      <span className="created-date">{project.createdAt}</span>
+                    </div>
+
+                    <button
+                      className="btn-access"
+                      onClick={() => handleAccessProject(project.id)}
+                    >
+                      Acceder al Proyecto →
+                    </button>
                   </div>
+                ))}
+              </div>
 
-                  <h3 className="project-name">{project.name}</h3>
-                  <p className="project-description">{project.description}</p>
-
-                  <div className="card-footer">
-                    <span className="tasks-count">
-                      📋 {project.tasksCount} tareas
-                    </span>
-                    <span className="created-date">{project.createdAt}</span>
+              <div className="projects-summary">
+                <div className="summary-stat">
+                  <span className="stat-icon">📁</span>
+                  <div>
+                    <p className="stat-label">Proyectos Creados</p>
+                    <p className="stat-value">{projects.length}</p>
                   </div>
-
-                  <button className="btn-access">Acceder al Proyecto →</button>
                 </div>
-              ))}
-            </div>
-
-            <div className="projects-summary">
-              <div className="summary-stat">
-                <span className="stat-icon">📁</span>
-                <div>
-                  <p className="stat-label">Proyectos Creados</p>
-                  <p className="stat-value">{projects.length}</p>
+                <div className="summary-stat">
+                  <span className="stat-icon">📋</span>
+                  <div>
+                    <p className="stat-label">Tareas Totales</p>
+                    <p className="stat-value">
+                      {projects.reduce(
+                        (sum, p) => sum + (p.tasksCount || 0),
+                        0,
+                      )}
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div className="summary-stat">
-                <span className="stat-icon">📋</span>
-                <div>
-                  <p className="stat-label">Tareas Totales</p>
-                  <p className="stat-value">
-                    {projects.reduce((sum, p) => sum + p.tasksCount, 0)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-      </main>
+            </>
+          )}
+        </main>
+      )}
 
       {/* MODAL CREAR PROYECTO */}
       {showCreateModal && (
@@ -335,6 +486,19 @@ export default function Dashboard() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* MODAL ASIGNAR TAREAS */}
+      {showAssignTasksModal && selectedProjectForAssign && (
+        <AssignTasksModal
+          projectId={selectedProjectForAssign.id}
+          projectName={selectedProjectForAssign.name}
+          onClose={() => {
+            setShowAssignTasksModal(false);
+            setSelectedProjectForAssign(null);
+          }}
+          onTasksAssigned={handleTasksAssigned}
+        />
       )}
     </div>
   );

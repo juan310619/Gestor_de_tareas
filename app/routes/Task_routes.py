@@ -23,7 +23,37 @@ def get_my_tasks(
     return crud.get_tasks_by_user(db, current_user.id)
 
 
+@router.post("/tasks/", response_model=TaskRead)
+def create_task(
+    task: TaskCreate,
+    current_user: UserRead = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return crud.create_task(db, task, current_user.id)
 
+
+@router.get("/tasks/search", response_model=list[TaskRead])
+def search_tasks(
+    q: str = Query(..., min_length=2),
+    current_user: UserRead = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    tasks = crud.get_tasks_by_keywords(db, q, current_user.id)
+
+    if not tasks:
+        raise HTTPException(status_code=404, detail="No tasks found")
+
+    return tasks
+
+
+@router.get("/tasks/without-project", response_model=list[TaskRead])
+def get_tasks_without_project(
+    current_user: UserRead = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Obtener tareas del usuario que no tienen un proyecto asignado"""
+    tasks = crud.get_tasks_without_project(db, current_user.id)
+    return tasks
 
 
 @router.get("/tasks/by-title/{title}", response_model=TaskRead)
@@ -53,18 +83,6 @@ def get_tasks_by_category(
 
     return tasks
 
-@router.get("/tasks/search", response_model=list[TaskRead])
-def search_tasks(
-    q: str = Query(..., min_length=2),
-    current_user: UserRead = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    tasks = crud.get_tasks_by_keywords(db, q, current_user.id)
-
-    if not tasks:
-        raise HTTPException(status_code=404, detail="No tasks found")
-
-    return tasks
 
 @router.get("/tasks/by-status/{completed}", response_model=list[TaskRead])
 def get_tasks_by_status(
@@ -78,6 +96,7 @@ def get_tasks_by_status(
         raise HTTPException(status_code=404, detail="No tasks found")
 
     return tasks
+
 
 @router.get("/tasks/by-priority/{priority}", response_model=list[TaskRead])
 def get_tasks_by_priority(
@@ -108,13 +127,22 @@ def get_tasks_by_month(
     return tasks
 
 
-@router.post("/tasks/", response_model=TaskRead)
-def create_task(
-    task: TaskCreate,
+@router.get("/tasks/{task_id}", response_model=TaskRead)
+def get_task(
+    task_id: int,
     current_user: UserRead = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return crud.create_task(db, task, current_user.id)
+    task = crud.get_task_by_id(db, task_id)
+
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    if task.user_id != current_user.id and not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    return task
+
 
 @router.put("/tasks/{task_id}", response_model=TaskRead)
 def update_task(
@@ -151,24 +179,6 @@ def delete_task(
 
     crud.delete_task(db, task_id)
     return {"message": "Task deleted"}
-
-
-#obtener tarea por id QUIERO QUE SEA ADMIN
-@router.get("/tasks/{task_id}", response_model=TaskRead)
-def get_task(
-    task_id: int,
-    current_user: UserRead = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    task = crud.get_task_by_id(db, task_id)
-
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-
-    if task.user_id != current_user.id and not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Not authorized")
-
-    return task
 
 
 
