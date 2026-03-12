@@ -3,6 +3,8 @@ import { DndContext } from "@dnd-kit/core";
 import Board from "../components/Board";
 import TaskModal from "../components/TaskModal";
 import AddTaskModal from "../components/AddTaskModal";
+import SearchBar from "../components/SearchBar";
+import FilterBar from "../components/FilterBar";
 import type { Task } from "../types/task";
 import { convertTaskReadToTask } from "../types/task";
 import { apiService } from "../services/api";
@@ -10,6 +12,7 @@ import "../styles/layout.css";
 
 export default function Layout() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -17,6 +20,10 @@ export default function Layout() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState<number | null>(null);
   const [projectName, setProjectName] = useState<string>("Mis Tareas");
+  const [selectedStatus, setSelectedStatus] = useState("todos");
+  const [selectedPriority, setSelectedPriority] = useState("todas");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   // Cargar tareas al montar
   useEffect(() => {
@@ -71,6 +78,7 @@ export default function Layout() {
         : convertedTasks;
 
       setTasks(filteredTasks);
+      setAllTasks(filteredTasks);
     } catch (err) {
       const errorMsg =
         err instanceof Error ? err.message : "Error al cargar tareas";
@@ -96,9 +104,11 @@ export default function Layout() {
         taskData.priority || "medium",
         taskData.project_id,
         taskData.dueDate,
+        taskData.descriptionImages,
       );
       const newTask = convertTaskReadToTask(newTaskRead);
       setTasks((prev) => [...prev, newTask]);
+      setAllTasks((prev) => [...prev, newTask]);
       setShowAddModal(false);
     } catch (err) {
       const errorMsg =
@@ -115,6 +125,7 @@ export default function Layout() {
       const updatedRead = await apiService.updateTask(id, updates);
       const updatedTask = convertTaskReadToTask(updatedRead);
       setTasks((prev) => prev.map((t) => (t.id === id ? updatedTask : t)));
+      setAllTasks((prev) => prev.map((t) => (t.id === id ? updatedTask : t)));
       closeTask();
     } catch (err) {
       const errorMsg =
@@ -130,6 +141,7 @@ export default function Layout() {
       setError("");
       await apiService.deleteTask(id);
       setTasks((prev) => prev.filter((t) => t.id !== id));
+      setAllTasks((prev) => prev.filter((t) => t.id !== id));
       closeTask();
     } catch (err) {
       const errorMsg =
@@ -145,6 +157,9 @@ export default function Layout() {
       setError("");
       await apiService.updateTaskStatus(id, status);
       setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
+      setAllTasks((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, status } : t)),
+      );
     } catch (err) {
       const errorMsg =
         err instanceof Error ? err.message : "Error al cambiar estado";
@@ -163,6 +178,81 @@ export default function Layout() {
   const handleLogout = () => {
     apiService.logout();
     window.location.href = "/";
+  };
+
+  // BUSCAR TAREAS
+  const handleSearchTasks = (query: string) => {
+    applyFilters(query, selectedStatus, selectedPriority, startDate, endDate);
+  };
+
+  // FILTRAR POR ESTADO
+  const handleStatusChange = (status: string) => {
+    setSelectedStatus(status);
+    applyFilters("", status, selectedPriority, startDate, endDate);
+  };
+
+  // FILTRAR POR PRIORIDAD
+  const handlePriorityChange = (priority: string) => {
+    setSelectedPriority(priority);
+    applyFilters("", selectedStatus, priority, startDate, endDate);
+  };
+
+  // FILTRAR POR FECHAS
+  const handleDateChange = (newStartDate: string, newEndDate: string) => {
+    setStartDate(newStartDate);
+    setEndDate(newEndDate);
+    applyFilters(
+      "",
+      selectedStatus,
+      selectedPriority,
+      newStartDate,
+      newEndDate,
+    );
+  };
+
+  // APLICAR FILTROS Y BÚSQUEDA
+  const applyFilters = (
+    query: string,
+    status: string,
+    priority: string,
+    start: string,
+    end: string,
+  ) => {
+    let filtered = allTasks;
+
+    // Filtrar por búsqueda
+    if (query.trim() !== "") {
+      filtered = filtered.filter(
+        (task) =>
+          task.title.toLowerCase().includes(query.toLowerCase()) ||
+          task.description.toLowerCase().includes(query.toLowerCase()) ||
+          (task.category &&
+            task.category.toLowerCase().includes(query.toLowerCase())),
+      );
+    }
+
+    // Filtrar por estado
+    if (status !== "todos") {
+      filtered = filtered.filter((task) => task.status === status);
+    }
+
+    // Filtrar por prioridad
+    if (priority !== "todas") {
+      filtered = filtered.filter(
+        (task) => task.priority?.toLowerCase() === priority.toLowerCase(),
+      );
+    }
+
+    // Filtrar por fecha de vencimiento
+    if (start && end) {
+      filtered = filtered.filter((task) => {
+        if (!task.dueDate) return false;
+        const taskDate = new Date(task.dueDate).toISOString().split("T")[0];
+        return taskDate >= start && taskDate <= end;
+      });
+    }
+
+    setTasks(filtered);
   };
 
   if (!isLoggedIn) {
@@ -206,6 +296,38 @@ export default function Layout() {
           ✨ Nueva Tarea
         </button>
       </header>
+
+      {/* SEARCH BAR */}
+      {!loading && allTasks.length > 0 && (
+        <div className="layout-search-container">
+          <SearchBar
+            onSearch={handleSearchTasks}
+            placeholder="Buscar tareas por título, descripción o categoría..."
+            onClear={() => {
+              applyFilters(
+                "",
+                selectedStatus,
+                selectedPriority,
+                startDate,
+                endDate,
+              );
+            }}
+          />
+        </div>
+      )}
+
+      {/* FILTER BAR */}
+      {!loading && allTasks.length > 0 && (
+        <FilterBar
+          onStatusChange={handleStatusChange}
+          onPriorityChange={handlePriorityChange}
+          onDateChange={handleDateChange}
+          selectedStatus={selectedStatus}
+          selectedPriority={selectedPriority}
+          selectedStartDate={startDate}
+          selectedEndDate={endDate}
+        />
+      )}
 
       {/* ERROR MESSAGE */}
       {error && (

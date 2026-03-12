@@ -104,6 +104,11 @@
   animation: slideDown 0.3s ease-out;
 }
 
+.layout-search-container {
+  padding: 1.5rem 3rem;
+  background-color: #0f172a;
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;

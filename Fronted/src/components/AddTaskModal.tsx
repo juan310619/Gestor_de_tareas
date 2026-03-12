@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Status, STATUS_LABELS } from "../types/task";
+import DescriptionEditor from "./DescriptionEditor";
 
 interface Props {
   onClose: () => void;
@@ -11,6 +12,7 @@ interface Props {
     project_id?: number;
     priority?: string;
     dueDate?: string;
+    descriptionImages?: string;
   }) => void;
 }
 
@@ -21,6 +23,7 @@ export default function AddTaskModal({ onClose, onSave }: Props) {
   const [status, setStatus] = useState(Status.pending);
   const [priority, setPriority] = useState("medium");
   const [dueDate, setDueDate] = useState("");
+  const [descriptionImages, setDescriptionImages] = useState("");
 
   const handleSave = () => {
     if (!title.trim()) {
@@ -39,6 +42,7 @@ export default function AddTaskModal({ onClose, onSave }: Props) {
       priority,
       dueDate,
       project_id: projectId ? Number(projectId) : undefined,
+      descriptionImages: descriptionImages || undefined,
     });
     onClose();
   };
@@ -67,12 +71,12 @@ export default function AddTaskModal({ onClose, onSave }: Props) {
           </label>
 
           <label style={styles.label}>
-            <span style={styles.labelText}>Descripción</span>
-            <textarea
-              placeholder="Describe los detalles de tu tarea..."
+            <span style={styles.labelText}>Descripción (con imágenes)</span>
+            <DescriptionEditor
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              style={styles.textarea}
+              onChange={setDescription}
+              descriptionImages={descriptionImages}
+              onImagesChange={setDescriptionImages}
             />
           </label>
 
@@ -198,6 +202,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: "1.5rem",
     overflowY: "auto",
     flex: 1,
+    minHeight: 0,
   } as React.CSSProperties,
   label: {
     display: "flex",

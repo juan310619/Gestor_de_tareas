@@ -41,10 +41,8 @@ def get_db():
 
 def authenticate_user(db:Session, username: str, password:str):
     user = get_user_by_username(db,username)
-    if not user:
-        raise HTTPException(status_code=401, detail="Incorret user")
-    if not verify_password(password,user.password):
-        raise HTTPException(status_code=401, detail="Incorret password")
+    if not user or not verify_password(password, user.password):
+        raise HTTPException(status_code=401, detail="Credenciales incorrectas")
     return user
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta]=None):
@@ -79,10 +77,27 @@ def get_current_user(token: str = Depends(oauth2_scheme),db:Session=Depends(get_
         raise credentials_exception
     return user
 
+def create_password_reset_token(email: str) -> str:
+    expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+    to_encode = {"sub": email, "exp": expire, "type": "password_reset"}
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+def verify_password_reset_token(token: str) -> Optional[str]:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("type") != "password_reset":
+            return None
+        email: str = payload.get("sub")
+        if email is None:
+            return None
+        return email
+    except JWTError:
+        return None
 
 
 def admin_required(current_user = Depends(get_current_user)):
-    if not current_user.is_admin:
+    if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin privileges required"

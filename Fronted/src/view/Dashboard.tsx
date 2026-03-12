@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import type { ProjectRead } from "../services/api";
 import { apiService } from "../services/api";
 import AssignTasksModal from "../components/AssignTasksModal";
+import SearchBar from "../components/SearchBar";
+import ProfileModal from "../components/ProfileModal";
 import "../styles/dashboard.css";
 
 interface ProjectWithTasks extends ProjectRead {
@@ -20,6 +22,7 @@ const MOTIVATIONAL_QUOTES = [
 
 export default function Dashboard() {
   const [projects, setProjects] = useState<ProjectWithTasks[]>([]);
+  const [allProjects, setAllProjects] = useState<ProjectWithTasks[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAssignTasksModal, setShowAssignTasksModal] = useState(false);
@@ -35,11 +38,19 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Cargar proyectos al montar componente
   useEffect(() => {
     checkAuth();
     loadProjectsAndTasks();
+    
+    // Verificar si es usuario nuevo para mostrar el modal del perfil
+    const isNewUser = localStorage.getItem('is_new_user');
+    if (isNewUser === 'true') {
+      setShowProfileModal(true);
+      localStorage.removeItem('is_new_user'); // Lo removemos para que no vuelva a salir
+    }
   }, []);
 
   // Cargar proyectos y luego tareas
@@ -66,12 +77,12 @@ export default function Dashboard() {
       });
 
       // Actualizar estado UNA SOLA VEZ con todos los datos correctos
-      setProjects(
-        projectsData.map((p) => ({
-          ...p,
-          tasksCount: taskCounts[p.id] || 0,
-        })),
-      );
+      const updatedProjects = projectsData.map((p) => ({
+        ...p,
+        tasksCount: taskCounts[p.id] || 0,
+      }));
+      setProjects(updatedProjects);
+      setAllProjects(updatedProjects);
     } catch (err) {
       const errorMsg =
         err instanceof Error ? err.message : "Error al cargar proyectos";
@@ -80,6 +91,7 @@ export default function Dashboard() {
         console.error("Error:", err);
       } else {
         setProjects([]);
+        setAllProjects([]);
       }
     } finally {
       setLoading(false);
@@ -125,7 +137,10 @@ export default function Dashboard() {
         formData.name,
         formData.description,
       );
-      setProjects([...projects, { ...newProject, tasksCount: 0 }]);
+      const projectWithCount = { ...newProject, tasksCount: 0 };
+      // Actualizar ambos estados para reflejar el cambio inmediatamente
+      setProjects([...projects, projectWithCount]);
+      setAllProjects([...allProjects, projectWithCount]);
       setFormData({ name: "", description: "" });
       setShowCreateModal(false);
     } catch (err) {
@@ -148,11 +163,15 @@ export default function Dashboard() {
         formData.name,
         formData.description,
       );
-      setProjects(
-        projects.map((p) =>
-          p.id === editingProject.id ? { ...p, ...updated } : p,
-        ),
+      // Actualizar ambos estados
+      const updatedProjects = projects.map((p) =>
+        p.id === editingProject.id ? { ...p, ...updated } : p,
       );
+      const updatedAllProjects = allProjects.map((p) =>
+        p.id === editingProject.id ? { ...p, ...updated } : p,
+      );
+      setProjects(updatedProjects);
+      setAllProjects(updatedAllProjects);
 
       setFormData({ name: "", description: "" });
       setEditingProject(null);
@@ -171,7 +190,11 @@ export default function Dashboard() {
       try {
         setError("");
         await apiService.deleteProject(id);
-        setProjects(projects.filter((p) => p.id !== id));
+        // Actualizar ambos estados (projects y allProjects) para reflejar el cambio inmediatamente
+        const updatedProjects = projects.filter((p) => p.id !== id);
+        const updatedAllProjects = allProjects.filter((p) => p.id !== id);
+        setProjects(updatedProjects);
+        setAllProjects(updatedAllProjects);
       } catch (err) {
         const errorMsg =
           err instanceof Error ? err.message : "Error al eliminar proyecto";
@@ -191,6 +214,20 @@ export default function Dashboard() {
   const handleLogout = () => {
     apiService.logout();
     window.location.href = "/";
+  };
+
+  // BUSCAR PROYECTOS
+  const handleSearchProjects = (query: string) => {
+    if (query.trim() === "") {
+      setProjects(allProjects);
+    } else {
+      const filtered = allProjects.filter(
+        (project) =>
+          project.name.toLowerCase().includes(query.toLowerCase()) ||
+          project.description.toLowerCase().includes(query.toLowerCase()),
+      );
+      setProjects(filtered);
+    }
   };
 
   // ACCEDER AL PROYECTO
@@ -213,11 +250,22 @@ export default function Dashboard() {
           <h1 className="navbar-logo">📋 TaskFlow</h1>
         </div>
         <div className="navbar-right">
+          <button className="btn-profile" onClick={() => setShowProfileModal(true)}>
+            👤 Mi Perfil
+          </button>
           <button className="btn-logout" onClick={handleLogout}>
             Cerrar sesión
           </button>
         </div>
       </nav>
+
+      {/* MODAL PERFIL PARA USUARIOS NUEVOS */}
+      {showProfileModal && (
+        <ProfileModal
+          onProfileComplete={() => setShowProfileModal(false)}
+          onLogout={handleLogout}
+        />
+      )}
 
       {/* HERO SECTION */}
       <section className="dashboard-hero">
@@ -257,6 +305,17 @@ export default function Dashboard() {
           ➕ Nuevo Proyecto
         </button>
       </header>
+
+      {/* SEARCH BAR */}
+      {!loading && allProjects.length > 0 && (
+        <SearchBar
+          onSearch={handleSearchProjects}
+          placeholder="Buscar proyectos por nombre o descripción..."
+          onClear={() => {
+            setProjects(allProjects);
+          }}
+        />
+      )}
 
       {/* LOADING STATE */}
       {loading && (

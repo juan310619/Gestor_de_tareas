@@ -14,7 +14,7 @@ from app.crud.user_crud import create_user, check_existing_user
 test_user = UserCreate(
     username="test_sin_nombre",
     email="test_sin_nombre@test.com",
-    password="password123"
+    password="Password123!"
 )
 
 print("Creando sesión con BD...")

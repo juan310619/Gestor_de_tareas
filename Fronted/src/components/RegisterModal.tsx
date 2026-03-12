@@ -5,11 +5,13 @@ import "../styles/login.css";
 interface RegisterProps {
   onRegisterSuccess: () => void;
   onToggleLogin: () => void;
+  onClose: () => void;
 }
 
 export default function RegisterModal({
   onRegisterSuccess,
   onToggleLogin,
+  onClose,
 }: RegisterProps) {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -24,7 +26,7 @@ export default function RegisterModal({
     setPassword("");
     setConfirmPassword("");
     setError("");
-    window.history.back();
+    onClose();
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -69,6 +71,7 @@ export default function RegisterModal({
 
       // Auto login después del registro
       await apiService.login(username, password);
+      localStorage.setItem('is_new_user', 'true');
       onRegisterSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al registrarse");

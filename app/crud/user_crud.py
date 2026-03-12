@@ -80,8 +80,11 @@ def update_user(db:Session,user_id: int, user: UserUpdate) -> Optional[User]:
     """ Convierte el modelo Pydantic (user) en un diccionario.
 Solo incluye los campos que el usuario sí envió (no los que están vacíos o por defecto)."""
     if db_user:
+        # Whitelist de campos permitidos para prevenir mass assignment
+        ALLOWED_FIELDS = {'first_name', 'last_name', 'email', 'username'}
         for field, value in user.model_dump(exclude_unset=True).items():
-            setattr(db_user, field, value)
+            if field in ALLOWED_FIELDS:
+                setattr(db_user, field, value)
         db_user.updated_at = datetime.now(timezone.utc) # Actualiza la columna update_at con la fecha y hora actuales
         db.commit()
         db.refresh(db_user)
@@ -98,10 +101,13 @@ def delete_user(db:Session,user_id: int) -> bool:
         return False
 
 
-
-
-
-
-
-
-
+def update_user_password(db: Session, user_id: int, new_password: str) -> bool:
+    statement = select(User).where(User.id == user_id)
+    db_user = db.exec(statement).first()
+    if db_user:
+        hashed_password = get_password_hash(new_password)
+        db_user.password = hashed_password
+        db_user.updated_at = datetime.now(timezone.utc)
+        db.commit()
+        return True
+    return False

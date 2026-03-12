@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Task } from "../types/task";
 import { STATUS_LABELS, Status } from "../types/task";
+import DescriptionEditor from "./DescriptionEditor";
 
 interface Props {
   task: Task;
@@ -21,9 +22,19 @@ export default function TaskModal({
   const [category, setCategory] = useState(task.category);
   const [status, setStatus] = useState(task.status);
   const [dueDate, setDueDate] = useState(task.dueDate || "");
+  const [descriptionImages, setDescriptionImages] = useState(
+    task.descriptionImages || "",
+  );
 
   const handleSave = () => {
-    onUpdate(task.id, { title, description, category, status, dueDate });
+    onUpdate(task.id, {
+      title,
+      description,
+      category,
+      status,
+      dueDate,
+      descriptionImages,
+    });
     setIsEditing(false);
   };
 
@@ -58,11 +69,12 @@ export default function TaskModal({
             </label>
 
             <label style={styles.label}>
-              <span style={styles.labelText}>Descripción</span>
-              <textarea
+              <span style={styles.labelText}>Descripción (con imágenes)</span>
+              <DescriptionEditor
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                style={styles.textarea}
+                onChange={setDescription}
+                descriptionImages={descriptionImages}
+                onImagesChange={setDescriptionImages}
               />
             </label>
 
@@ -127,6 +139,33 @@ export default function TaskModal({
               <p style={styles.fieldValue}>{task.description}</p>
             </div>
 
+            {task.descriptionImages &&
+              (() => {
+                try {
+                  const images = JSON.parse(task.descriptionImages);
+                  if (Array.isArray(images) && images.length > 0) {
+                    return (
+                      <div style={styles.field}>
+                        <span style={styles.fieldLabel}>Imágenes</span>
+                        <div style={styles.imagesDisplay}>
+                          {images.map((img: any, idx: number) => (
+                            <img
+                              key={idx}
+                              src={img.dataUrl || img}
+                              alt={`Imagen ${idx + 1}`}
+                              style={styles.displayImage}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                } catch {
+                  return null;
+                }
+              })()}
+
             <div style={styles.field}>
               <span style={styles.fieldLabel}>Categoría</span>
               <div>
@@ -188,7 +227,10 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: "1px solid #334155",
     boxShadow: "0 20px 25px rgba(0, 0, 0, 0.3)",
     overflow: "hidden",
-  },
+    display: "flex",
+    flexDirection: "column",
+    maxHeight: "90vh",
+  } as React.CSSProperties,
   header: {
     padding: "1.5rem",
     borderBottom: "1px solid #334155",
@@ -196,6 +238,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "#0f172a",
+    flexShrink: 0,
   },
   title: {
     margin: 0,
@@ -219,10 +262,16 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   viewContent: {
     padding: "1.5rem",
-  },
+    overflowY: "auto",
+    flex: 1,
+    minHeight: 0,
+  } as React.CSSProperties,
   formContent: {
     padding: "1.5rem",
-  },
+    overflowY: "auto",
+    flex: 1,
+    minHeight: 0,
+  } as React.CSSProperties,
   field: {
     marginBottom: "1.5rem",
   },
@@ -356,5 +405,18 @@ const styles: { [key: string]: React.CSSProperties } = {
     cursor: "pointer",
     fontWeight: 600,
     fontSize: "0.9rem",
+  } as React.CSSProperties,
+  imagesDisplay: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "0.75rem",
+    marginTop: "0.75rem",
+  } as React.CSSProperties,
+  displayImage: {
+    maxWidth: "200px",
+    maxHeight: "200px",
+    borderRadius: "8px",
+    border: "1px solid #334155",
+    objectFit: "cover",
   } as React.CSSProperties,
 };

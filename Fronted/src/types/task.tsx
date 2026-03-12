@@ -24,6 +24,7 @@ export interface Task {
   completed?: boolean;
   completedAt?: string;
   updatedAt?: string;
+  descriptionImages?: string; // JSON array de imágenes en base64
 }
 
 // Tipo para la respuesta del backend con alias camelCase
@@ -41,6 +42,7 @@ export interface TaskRead {
   userId?: number;
   projectId?: number;
   status: string; // ✅ Agregar status del backend
+  descriptionImages?: string; // ✅ JSON array de imágenes en base64
 }
 
 // Función para convertir TaskRead (backend) a Task (frontend)
@@ -59,5 +61,6 @@ export function convertTaskReadToTask(taskRead: TaskRead): Task {
     completedAt: taskRead.completedAt,
     updatedAt: taskRead.updatedAt,
     completed: taskRead.completed,
+    descriptionImages: taskRead.descriptionImages,
   };
 }

@@ -1,25 +1,25 @@
 #  Importo las librerías necesarias
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 
 
 #  Clase base con los campos comunes entre crear, leer y actualizar
 class ProjectBase(BaseModel):
-    name: str
-    description: Optional[str] = None
+    name: str = Field(..., min_length=1, max_length=200)
+    description: Optional[str] = Field(None, max_length=2000)
 
 
 #  Esquema que usaré cuando se crea un nuevo proyecto
 class ProjectCreate(BaseModel):
-    name: str
-    description: Optional[str] = None
+    name: str = Field(..., min_length=1, max_length=200)
+    description: Optional[str] = Field(None, max_length=2000)
 
 
 #  Esquema que usaré cuando se actualiza un proyecto existente
 class ProjectUpdate(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
+    name: Optional[str] = Field(None, max_length=200)
+    description: Optional[str] = Field(None, max_length=2000)
 
 
 #  Esquema que usaré para devolver la información de un proyecto al cliente
@@ -30,4 +30,4 @@ class ProjectRead(ProjectBase):
     updated_at: Optional[datetime] = None
 
     class Config:
-        from_attributes = True  # Permite crear este modelo a partir de un objeto SQLModel
+        from_attributes = True

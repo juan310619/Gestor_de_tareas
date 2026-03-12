@@ -98,6 +98,16 @@ def get_tasks_without_project(db: Session, user_id: int) -> List[Task]:
     return db.exec(statement).all()
 
 
+def get_tasks_by_due_date(db: Session, start_date: datetime, end_date: datetime, user_id: int) -> List[Task]:
+    """Obtener tareas con fecha de vencimiento en un rango específico"""
+    statement = select(Task).where(
+        Task.user_id == user_id,
+        Task.due_date >= start_date,
+        Task.due_date <= end_date
+    )
+    return db.exec(statement).all()
+
+
 def create_task(db: Session, task: TaskCreate, user_id: int) -> Task:
     db_task = Task.model_validate(task)
     db_task.user_id = user_id
@@ -120,8 +130,12 @@ def update_task(db: Session, task_id: int, task: TaskUpdate) -> Optional[Task]:
     if not db_task:
         return None
 
+    # Whitelist de campos permitidos para prevenir mass assignment
+    ALLOWED_FIELDS = {'title', 'description', 'category', 'due_date', 'completed',
+                      'priority', 'status', 'project_id', 'description_images'}
     for field, value in task.model_dump(exclude_unset=True).items():
-        setattr(db_task, field, value)
+        if field in ALLOWED_FIELDS:
+            setattr(db_task, field, value)
 
     db_task.updated_at = datetime.now(timezone.utc)
 

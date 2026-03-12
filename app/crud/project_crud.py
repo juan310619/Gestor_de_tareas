@@ -1,5 +1,6 @@
 from sqlmodel import Session, select
 from app.models.projects_model import Project
+from app.models.tasks_model import Task
 from datetime import datetime, timezone
 from typing_extensions import List, Optional
 from app.schema.projects_schema import ProjectCreate, ProjectUpdate
@@ -50,8 +51,11 @@ def update_project(db: Session, project_id: int, project: ProjectUpdate) -> Opti
     if not db_project:
         return None
 
+    # Whitelist de campos permitidos para prevenir mass assignment
+    ALLOWED_FIELDS = {'name', 'description'}
     for field, value in project.model_dump(exclude_unset=True).items():
-        setattr(db_project, field, value)
+        if field in ALLOWED_FIELDS:
+            setattr(db_project, field, value)
 
     db_project.updated_at = datetime.now(timezone.utc)
 
@@ -67,6 +71,20 @@ def delete_project(db: Session, project_id: int) -> bool:
     if not project:
         return False
 
-    db.delete(project)
-    db.commit()
-    return True
+    try:
+        # Eliminar primero todas las tareas asociadas al proyecto (cascade manual seguro)
+        delete_tasks_statement = select(Task).where(Task.project_id == project_id)
+        tasks_to_delete = db.exec(delete_tasks_statement).all()
+        for task in tasks_to_delete:
+            db.delete(task)
+
+        db.flush()
+
+        # Ahora eliminar el proyecto
+        db.delete(project)
+        db.commit()
+        return True
+    except Exception as e:
+        db.rollback()
+        raise e
+

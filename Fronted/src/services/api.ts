@@ -169,6 +169,26 @@ class ApiService {
     this.clearToken();
   }
 
+  // ==================== RECUPERACIÓN DE CONTRASEÑA ====================
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(
+      "POST",
+      "/api/user/forgot-password",
+      { email },
+      false
+    );
+  }
+
+  async resetPassword(token: string, new_password: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(
+      "POST",
+      "/api/user/reset-password",
+      { token, new_password },
+      false
+    );
+  }
+
   // ==================== USUARIOS ====================
 
   // Crear usuario (registro)
@@ -302,6 +322,7 @@ class ApiService {
     priority: string,
     projectId?: number,
     dueDate?: string,
+    descriptionImages?: string,
   ): Promise<TaskRead> {
     return this.request<TaskRead>(
       "POST",
@@ -314,6 +335,7 @@ class ApiService {
         priority,
         projectId: projectId, // Usar camelCase como en el schema
         dueDate: dueDate ? dueDate : null,
+        descriptionImages: descriptionImages || null,
       },
       true,
     );
@@ -394,6 +416,19 @@ class ApiService {
     );
   }
 
+  // Obtener tareas por rango de fechas de vencimiento
+  async getTasksByDueDate(
+    startDate: string,
+    endDate: string,
+  ): Promise<TaskRead[]> {
+    return this.request<TaskRead[]>(
+      "GET",
+      `/api/task/tasks/by-due-date?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`,
+      undefined,
+      true,
+    );
+  }
+
   // Obtener tareas por mes
   async getTasksByMonth(year: number, month: number): Promise<TaskRead[]> {
     return this.request<TaskRead[]>(
@@ -450,6 +485,60 @@ class ApiService {
       { status },
       true,
     );
+  }
+
+  // ==================== IMÁGENES ====================
+
+  // Subir imagen para descripción de tarea
+  async uploadTaskImage(
+    file: File,
+  ): Promise<{ dataUrl: string; message: string; success: boolean }> {
+    const url = `${API_URL}/api/task/tasks/upload-image`;
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+    try {
+      const headers: HeadersInit = {};
+      if (this.token) {
+        headers["Authorization"] = `Bearer ${this.token}`;
+      }
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers,
+        body: formData,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.status === 401) {
+        this.clearToken();
+        window.location.href = "/";
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.detail || data.message || `Error: ${response.status}`,
+        );
+      }
+
+      return data;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (
+        error instanceof TypeError &&
+        error.message.includes("Failed to fetch")
+      ) {
+        throw new Error("No se puede conectar con el servidor");
+      }
+      throw error;
+    }
   }
 }
 

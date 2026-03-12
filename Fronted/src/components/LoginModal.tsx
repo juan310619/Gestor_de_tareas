@@ -5,11 +5,15 @@ import "../styles/login.css";
 interface LoginProps {
   onLoginSuccess: () => void;
   onToggleRegister: () => void;
+  onToggleForgotPassword: () => void;
+  onClose: () => void;
 }
 
 export default function LoginModal({
   onLoginSuccess,
   onToggleRegister,
+  onToggleForgotPassword,
+  onClose,
 }: LoginProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -20,7 +24,7 @@ export default function LoginModal({
     setUsername("");
     setPassword("");
     setError("");
-    window.history.back();
+    onClose();
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -103,6 +107,17 @@ export default function LoginModal({
           </div>
 
           {error && <div className="error-message">{error}</div>}
+
+          <div style={{ textAlign: "right", marginTop: "10px", marginBottom: "15px" }}>
+            <button
+              type="button"
+              onClick={onToggleForgotPassword}
+              className="link-button"
+              style={{ fontSize: "14px" }}
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
 
           <button type="submit" className="btn-login" disabled={loading}>
             {loading ? "Iniciando sesión..." : "Iniciar Sesión"}

@@ -1,7 +1,8 @@
 # ...existing code...
 from __future__ import annotations
 from datetime import datetime, timezone
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, Column
+from sqlalchemy import Text
 from typing import Optional
 
 class TaskBase(SQLModel):
@@ -20,6 +21,7 @@ class TaskBase(SQLModel):
     user_id: Optional[int] = Field(default=None, foreign_key="users.id")
     project_id: Optional[int] = Field(default=None, foreign_key="projects.id")
     status: str = Field(default="pending", nullable=False)  # ✅ Agregar status: pending, in_progress, completed
+    description_images: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))  # ✅ LONGTEXT para imágenes base64
 
 class Task(TaskBase, table=True):
     __tablename__ = "tasks"

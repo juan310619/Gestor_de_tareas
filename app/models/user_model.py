@@ -15,7 +15,7 @@ class UserBase(SQLModel):
     is_active: bool = Field(default=True, nullable=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at: Optional[datetime] = Field(default=None, nullable=True)
-    is_admin: bool = Field(default=False, nullable=False) #nueva
+    role: str = Field(default="user", nullable=False) # "user" or "admin"
 
 
 

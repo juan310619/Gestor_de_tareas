@@ -1,0 +1,85 @@
+.filter-bar {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.5rem 3rem;
+  background-color: #1e293b;
+  border-bottom: 1px solid #334155;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.filter-select {
+  padding: 0.6rem 1rem;
+  background-color: #0f172a;
+  color: #e5e7eb;
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 150px;
+}
+
+.filter-select:hover {
+  border-color: #4a90e2;
+  background-color: #1a1f3a;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.filter-select option {
+  background-color: #1e293b;
+  color: #e5e7eb;
+}
+
+.filter-input-date {
+  padding: 0.6rem 1rem;
+  background-color: #0f172a;
+  color: #e5e7eb;
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 150px;
+}
+
+.filter-input-date:hover {
+  border-color: #4a90e2;
+  background-color: #1a1f3a;
+}
+
+.filter-input-date:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+@media (max-width: 768px) {
+  .filter-bar {
+    padding: 1rem 1.5rem;
+    gap: 1rem;
+  }
+
+  .filter-select {
+    min-width: 120px;
+    font-size: 0.85rem;
+    padding: 0.5rem 0.8rem;
+  }
+}

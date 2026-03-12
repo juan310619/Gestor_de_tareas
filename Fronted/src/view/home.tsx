@@ -1,7 +1,7 @@
 import { useState } from "react";
 import LoginModal from "../components/LoginModal";
 import RegisterModal from "../components/RegisterModal";
-import ProfileModal from "../components/ProfileModal";
+import ForgotPasswordModal from "../components/ForgotPasswordModal";
 import "../styles/home.css";
 
 /*
@@ -44,7 +44,7 @@ const presentationList: Presentation[] = [
 export default function Home() {
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const handleLoginSuccess = () => {
     setShowLogin(false);
@@ -56,20 +56,10 @@ export default function Home() {
 
   const handleRegisterSuccess = () => {
     setShowRegister(false);
-    // Mostrar modal de perfil después del registro
-    setShowProfile(true);
-  };
-
-  const handleProfileComplete = () => {
-    setShowProfile(false);
-    // Redirigir a dashboard después de 1 segundo
+    // Redirigir a dashboard después de 1 segundo (o inmediatamente)
     setTimeout(() => {
       window.location.href = "/dashboard";
     }, 1000);
-  };
-
-  const handleLogout = () => {
-    setShowProfile(false);
   };
 
   const scrollToCards = () => {
@@ -89,6 +79,11 @@ export default function Home() {
             setShowLogin(false);
             setShowRegister(true);
           }}
+          onToggleForgotPassword={() => {
+            setShowLogin(false);
+            setShowForgotPassword(true);
+          }}
+          onClose={() => setShowLogin(false)}
         />
       )}
 
@@ -99,15 +94,21 @@ export default function Home() {
             setShowRegister(false);
             setShowLogin(true);
           }}
+          onClose={() => setShowRegister(false)}
         />
       )}
 
-      {showProfile && (
-        <ProfileModal
-          onProfileComplete={handleProfileComplete}
-          onLogout={handleLogout}
+      {showForgotPassword && (
+        <ForgotPasswordModal
+          onBackToLogin={() => {
+            setShowForgotPassword(false);
+            setShowLogin(true);
+          }}
+          onClose={() => setShowForgotPassword(false)}
         />
       )}
+
+
 
       {/* NAVBAR */}
       <nav className="home-navbar">
