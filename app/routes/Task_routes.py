@@ -42,7 +42,7 @@ def get_db():
     finally:
         db.close()
 
-@router.get("/tasks/", response_model=list[TaskRead])
+@router.get("/tasks", response_model=list[TaskRead])
 def get_my_tasks(
     current_user: UserRead = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -50,7 +50,7 @@ def get_my_tasks(
     return crud.get_tasks_by_user(db, current_user.id)
 
 
-@router.post("/tasks/", response_model=TaskRead)
+@router.post("/tasks", response_model=TaskRead)
 def create_task(
     task: TaskCreate,
     current_user: UserRead = Depends(get_current_user),
