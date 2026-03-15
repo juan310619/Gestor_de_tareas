@@ -16,7 +16,7 @@ load_dotenv()
 # ✅ Rate Limiter global
 limiter = Limiter(key_func=get_remote_address)
 
-app = FastAPI()
+app = FastAPI(redirect_slashes=False)
 
 # Registrar limiter en la app
 app.state.limiter = limiter
