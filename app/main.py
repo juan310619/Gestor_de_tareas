@@ -23,7 +23,7 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
-# ✅ Middleware de headers de seguridad HTTP
+# ✅ 1. Clase del Middleware de headers de seguridad
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
@@ -34,20 +34,24 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Cache-Control"] = "no-store"
         return response
 
+# ✅ 2. Agregar SecurityHeaders PRIMERO
+app.add_middleware(SecurityHeadersMiddleware)
 
+# ✅ 3. Configurar CORS y agregarlo AL FINAL 
+# (Esto asegura que sea el último en procesar la respuesta y el navegador reciba los headers de CORS)
+raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173")
+allowed_origins = [o.strip() for o in raw_origins.split(",") if o.strip()]
 
+# Imprimir en logs de Render para verificar que se lee bien la variable
+print(f"INFO: Cargando orígenes permitidos: {allowed_origins}")
 
-# ✅ Configurar CORS desde variables de entorno
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_methods=["*"],  
+    allow_headers=["*"],  
 )
-
-app.add_middleware(SecurityHeadersMiddleware)
 
 # ✅ Crea las tablas al iniciar la aplicación
 create_tables()
