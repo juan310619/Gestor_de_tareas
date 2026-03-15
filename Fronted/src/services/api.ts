@@ -343,7 +343,7 @@ class ApiService {
 
   // Obtener mis tareas
   async getMyTasks(): Promise<TaskRead[]> {
-    return this.request<TaskRead[]>("GET", "/api/task/tasks/", undefined, true);
+    return this.request<TaskRead[]>("GET", "/api/task/tasks", undefined, true);
   }
 
   // Obtener tareas sin proyecto asignado
