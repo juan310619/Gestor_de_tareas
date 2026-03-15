@@ -34,7 +34,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Cache-Control"] = "no-store"
         return response
 
-app.add_middleware(SecurityHeadersMiddleware)
+
 
 
 # ✅ Configurar CORS desde variables de entorno
@@ -46,6 +46,8 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
 )
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 # ✅ Crea las tablas al iniciar la aplicación
 create_tables()
