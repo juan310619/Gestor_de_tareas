@@ -109,6 +109,16 @@ def get_tasks_by_due_date(db: Session, start_date: datetime, end_date: datetime,
 
 
 def create_task(db: Session, task: TaskCreate, user_id: int) -> Task:
+    # Validar tamaño de imágenes si existen
+    if task.description_images:
+        # Límite de 10MB (aprox 10*1024*1024 bytes)
+        # El Base64 aumenta el tamaño un 33%, así que 10MB es razonable para varias imágenes
+        if len(task.description_images) > 10 * 1024 * 1024:
+            raise HTTPException(
+                status_code=400, 
+                detail="El tamaño total de las imágenes supera el límite de 10MB permitido por tarea."
+            )
+
     db_task = Task.model_validate(task)
     db_task.user_id = user_id
     
@@ -135,6 +145,12 @@ def update_task(db: Session, task_id: int, task: TaskUpdate) -> Optional[Task]:
                       'priority', 'status', 'project_id', 'description_images'}
     for field, value in task.model_dump(exclude_unset=True).items():
         if field in ALLOWED_FIELDS:
+            # Validar tamaño si es el campo de imágenes
+            if field == 'description_images' and value and len(value) > 10 * 1024 * 1024:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="El tamaño total de las imágenes supera el límite de 10MB permitido por tarea."
+                )
             setattr(db_task, field, value)
 
     db_task.updated_at = datetime.now(timezone.utc)

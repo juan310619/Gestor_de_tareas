@@ -31,6 +31,12 @@ export default function AddTaskModal({ onClose, onSave }: Props) {
       return;
     }
 
+    // Validar tamaño de imágenes (10MB)
+    if (descriptionImages && descriptionImages.length > 10 * 1024 * 1024) {
+      alert("La tarea es demasiado pesada debido a las imágenes. Por favor, elimina algunas.");
+      return;
+    }
+
     // Obtener el project_id del localStorage
     const projectId = localStorage.getItem("currentProjectId");
 

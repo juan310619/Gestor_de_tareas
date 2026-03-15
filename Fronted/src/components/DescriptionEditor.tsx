@@ -113,6 +113,15 @@ export default function DescriptionEditor({
     onImagesChange?.(JSON.stringify(updatedImages));
   };
 
+  const calculateTotalSize = () => {
+    return JSON.stringify(images).length;
+  };
+
+  const totalSize = calculateTotalSize();
+  const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+  const isOverLimit = totalSize > MAX_SIZE;
+  const isNearLimit = totalSize > MAX_SIZE * 0.8;
+
   return (
     <div style={styles.container}>
       <textarea
@@ -128,14 +137,21 @@ export default function DescriptionEditor({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          disabled={disabled || isUploading}
-          style={styles.uploadBtn}
-          title="Clic para seleccionar una imagen"
+          disabled={disabled || isUploading || isOverLimit}
+          style={{
+            ...styles.uploadBtn,
+            ...(isOverLimit ? { backgroundColor: "#64748b", cursor: "not-allowed" } : {})
+          }}
+          title={isOverLimit ? "Límite de imágenes alcanzado" : "Clic para seleccionar una imagen"}
         >
           {isUploading ? "⏳ Subiendo..." : "📸 Agregar Imagen"}
         </button>
         <span style={styles.hint}>
-          o pega (Ctrl+V / Cmd+V) una imagen directamente
+          {isOverLimit 
+            ? "⚠️ Límite de 10MB alcanzado. Elimina algunas imágenes para guardar." 
+            : isNearLimit 
+              ? "⚠️ Te estás acercando al límite de 10MB." 
+              : "o pega (Ctrl+V / Cmd+V) una imagen directamente"}
         </span>
       </div>
 
