@@ -49,8 +49,11 @@ El equipo de Gestor de Tareas
         msg['Subject'] = subject
         msg.attach(MIMEText(body, 'plain'))
 
-        server = smtplib.SMTP(smtp_server, int(smtp_port))
-        server.starttls()
+        if int(smtp_port) == 465:
+            server = smtplib.SMTP_SSL(smtp_server, int(smtp_port))
+        else:
+            server = smtplib.SMTP(smtp_server, int(smtp_port))
+            server.starttls()
         server.login(smtp_user, smtp_password)
         server.send_message(msg)
         server.quit()
