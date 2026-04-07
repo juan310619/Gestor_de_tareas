@@ -18,7 +18,9 @@ SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{D
 # echo=False en producción para no exponer queries SQL en logs
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
-    echo=os.getenv("DEBUG", "false").lower() == "true"
+    echo=os.getenv("DEBUG", "false").lower() == "true",
+    pool_pre_ping=True,
+    pool_recycle=300,
 )
 
 

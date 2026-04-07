@@ -277,6 +277,25 @@ def upload_image(
                 detail="El archivo no es una imagen válida"
             )
         
+        # Reducir tamaño y comprimir con Pillow para evitar problemas en base de datos y lentitud en cliente
+        try:
+            from PIL import Image
+            img = Image.open(BytesIO(contents))
+            # Convertir a RGB si no lo es (necesario para JPEG sin transparencia)
+            if img.mode in ("RGBA", "P"):
+                img = img.convert("RGB")
+            
+            # Redimensionar la imagen a un máximo de 800x800
+            img.thumbnail((800, 800), Image.Resampling.LANCZOS)
+            
+            output = BytesIO()
+            # Guardar siempre como JPEG comprimido
+            img.save(output, format="JPEG", quality=80)
+            contents = output.getvalue()
+            file.content_type = "image/jpeg"
+        except Exception as e:
+            logger.error(f"No se pudo comprimir la imagen: {e}")
+
         # Convertir a base64
         image_base64 = base64.b64encode(contents).decode('utf-8')
         data_url = f"data:{file.content_type};base64,{image_base64}"
