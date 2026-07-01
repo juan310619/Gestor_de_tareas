@@ -1,4 +1,5 @@
 services:
+  # ───── Backend API (FastAPI) ─────
   - type: web
     name: gestor-tareas-api
     runtime: python
@@ -32,9 +33,24 @@ services:
       - key: SMTP_FROM
         sync: false
       - key: ALLOWED_ORIGINS
-        value: https://gestortareastarjeta.netlify.app,https://tu-frontend-en-render.onrender.com
-      - key: CORS_ORIGINS
-        value: https://gestortareastarjeta.netlify.app,https://tu-frontend-en-render.onrender.com
+        value: https://gestortareastarjeta.netlify.app
+      # ⚠️ Tras el primer deploy, agregá la URL del frontend en Render:
+      # Ej: https://gestor-tareas-frontend.onrender.com
+      # Podés editarlo desde el Dashboard de Render → Environment
+
+  # ───── Frontend (Vite + React) ─────
+  - type: static_site
+    name: gestor-tareas-frontend
+    region: oregon
+    buildCommand: cd Fronted && npm install && npm run build
+    staticPublishPath: Fronted/dist
+    buildFilter:
+      paths:
+        - Fronted/**
+    envVars:
+      - key: VITE_API_URL
+        value: https://gestor-tareas-api.onrender.com
+      # ⚠️ Ajustá esta URL si el backend se llama distinto en tu dashboard
 
 databases:
   - name: gestor-tareas-db
