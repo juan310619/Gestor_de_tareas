@@ -32,6 +32,22 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+# Configurar URL de base de datos desde DATABASE_URL o construir desde variables
+db_url = os.getenv("DATABASE_URL")
+if db_url:
+    config.set_main_option("sqlalchemy.url", db_url)
+else:
+    db_user = os.getenv("DB_USER")
+    db_password = os.getenv("DB_PASSWORD")
+    db_host = os.getenv("DB_HOST", "localhost")
+    db_port = os.getenv("DB_PORT", "3306")
+    db_name = os.getenv("DB_NAME")
+    if all([db_user, db_password, db_name]):
+        config.set_main_option(
+            "sqlalchemy.url",
+            f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+        )
+
 # 🔥 El metadata correcto para SQLModel
 target_metadata = SQLModel.metadata
 

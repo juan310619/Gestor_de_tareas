@@ -4,18 +4,22 @@ from sqlmodel import create_engine, SQLModel
 
 load_dotenv()
 
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("DB_PORT", "3306")
-DB_NAME = os.getenv("DB_NAME")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-if not all([DB_USER, DB_PASSWORD, DB_NAME]):
-    raise RuntimeError("Faltan variables de entorno de base de datos (DB_USER, DB_PASSWORD, DB_NAME)")
+if DATABASE_URL:
+    SQLALCHEMY_DATABASE_URL = DATABASE_URL
+else:
+    DB_USER = os.getenv("DB_USER")
+    DB_PASSWORD = os.getenv("DB_PASSWORD")
+    DB_HOST = os.getenv("DB_HOST", "localhost")
+    DB_PORT = os.getenv("DB_PORT", "3306")
+    DB_NAME = os.getenv("DB_NAME")
 
-SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    if not all([DB_USER, DB_PASSWORD, DB_NAME]):
+        raise RuntimeError("Faltan variables de entorno de base de datos. Define DATABASE_URL o DB_USER, DB_PASSWORD, DB_NAME")
 
-# echo=False en producción para no exponer queries SQL en logs
+    SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
     echo=os.getenv("DEBUG", "false").lower() == "true",

@@ -23,21 +23,21 @@ const presentationList: Presentation[] = [
     headline: "ORGANIZAR",
     description:
       "Organiza tu día, enfoca tu mente y avanza sin estrés. Este gestor de tareas te ayuda a ordenar tus pendientes de forma simple y visual. Clasifica tus tareas, define prioridades y sigue tu progreso paso a paso.",
-    image: "/images/orden.jpg",
+    image: "/images/orden.webp",
   },
   {
     id: 2,
     headline: "AVANZAR",
     description:
       "Avanza cada día, paso a paso, hacia tus metas. Cada acción cuenta. Marca lo completado y observa tu progreso crecer con claridad y propósito.",
-    image: "/images/avanzar.jpg",
+    image: "/images/avanzar.webp",
   },
   {
     id: 3,
     headline: "FINALIZAR",
     description:
       "Finaliza tus tareas y siente el logro de cada meta. Ver tu progreso y celebrar tu esfuerzo te mantiene enfocado y motivado.",
-    image: "/images/finalizar.jpg",
+    image: "/images/finalizar.webp",
   },
 ];
 

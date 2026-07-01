@@ -168,6 +168,10 @@ yarn-error.log*
 *.sqlite
 *.sqlite3
 
+# Ignorar imágenes subidas por usuarios (no confundir con assets del frontend)
+uploads/
+images/uploads/
+
 # OS
 .DS_Store
 .DS_Store?
@@ -176,6 +180,15 @@ yarn-error.log*
 .Trashes
 ehthumbs.db
 Thumbs.db
+Desktop.ini
+
+# Python version
+.python-version
+
+# Render / Deployment
+.env.production
+.env.local
+*.pid
 
 # Backup files
 *.bak
