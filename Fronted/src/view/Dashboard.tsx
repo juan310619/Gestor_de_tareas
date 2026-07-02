@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import type { ProjectRead } from "../services/api";
 import { apiService } from "../services/api";
+import { navigate } from "../services/navigate";
 import AssignTasksModal from "../components/AssignTasksModal";
 import SearchBar from "../components/SearchBar";
 import ProfileModal from "../components/ProfileModal";
@@ -235,7 +236,7 @@ export default function Dashboard() {
     // Guardar el proyecto actual en localStorage para que el componente Layout lo use
     localStorage.setItem("currentProjectId", projectId.toString());
     // Redirigir a la página de tareas
-    window.location.href = "/tasks";
+    navigate("/tasks");
   };
 
   if (!isLoggedIn) {

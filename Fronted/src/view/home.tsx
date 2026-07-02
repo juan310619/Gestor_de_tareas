@@ -2,6 +2,7 @@ import { useState } from "react";
 import LoginModal from "../components/LoginModal";
 import RegisterModal from "../components/RegisterModal";
 import ForgotPasswordModal from "../components/ForgotPasswordModal";
+import { navigate } from "../services/navigate";
 import "../styles/home.css";
 
 /*
@@ -48,17 +49,15 @@ export default function Home() {
 
   const handleLoginSuccess = () => {
     setShowLogin(false);
-    // Redirigir a dashboard después de 1 segundo
     setTimeout(() => {
-      window.location.href = "/dashboard";
+      navigate("/dashboard");
     }, 1000);
   };
 
   const handleRegisterSuccess = () => {
     setShowRegister(false);
-    // Redirigir a dashboard después de 1 segundo (o inmediatamente)
     setTimeout(() => {
-      window.location.href = "/dashboard";
+      navigate("/dashboard");
     }, 1000);
   };
 

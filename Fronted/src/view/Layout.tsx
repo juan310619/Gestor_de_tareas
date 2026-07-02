@@ -8,6 +8,7 @@ import FilterBar from "../components/FilterBar";
 import type { Task } from "../types/task";
 import { convertTaskReadToTask } from "../types/task";
 import { apiService } from "../services/api";
+import { navigate } from "../services/navigate";
 import "../styles/layout.css";
 
 export default function Layout() {
@@ -267,7 +268,7 @@ export default function Layout() {
           <h1 className="navbar-logo">📋 TaskFlow</h1>
           <button
             className="btn-back-dashboard"
-            onClick={() => (window.location.href = "/dashboard")}
+            onClick={() => navigate("/dashboard")}
             title="Volver al dashboard"
           >
             ← Mis Proyectos
