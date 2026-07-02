@@ -22,6 +22,7 @@ export default function TaskModal({
   const [description, setDescription] = useState(task.description);
   const [category, setCategory] = useState(task.category);
   const [status, setStatus] = useState(task.status);
+  const [priority, setPriority] = useState(task.priority || "medium");
   const [dueDate, setDueDate] = useState(task.dueDate || "");
   const [descriptionImages, setDescriptionImages] = useState(
     task.descriptionImages || "",
@@ -42,6 +43,7 @@ export default function TaskModal({
       description,
       category,
       status,
+      priority,
       dueDate,
       descriptionImages,
     });
@@ -127,6 +129,19 @@ export default function TaskModal({
             </label>
 
             <label style={styles.label}>
+              <span style={styles.labelText}>Prioridad</span>
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+                style={styles.select}
+              >
+                <option value="low">Baja</option>
+                <option value="medium">Media</option>
+                <option value="high">Alta</option>
+              </select>
+            </label>
+
+            <label style={styles.label}>
               <span style={styles.labelText}>
                 Fecha de Vencimiento (Opcional)
               </span>
@@ -194,6 +209,17 @@ export default function TaskModal({
               <div>
                 <span style={styles.categoryBadge}>{task.category}</span>
               </div>
+            </div>
+
+            <div style={styles.field}>
+              <span style={styles.fieldLabel}>Prioridad</span>
+              <p style={styles.fieldValue}>
+                {task.priority === "high"
+                  ? "Alta"
+                  : task.priority === "low"
+                    ? "Baja"
+                    : "Media"}
+              </p>
             </div>
 
             <div style={styles.field}>

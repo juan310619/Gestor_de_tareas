@@ -332,6 +332,31 @@
     padding: 0.6rem 1.25rem;
     font-size: 0.9rem;
   }
+
+  /* === TABLET NAVBAR === */
+  .layout-navbar {
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .navbar-left {
+    gap: 0.5rem;
+  }
+
+  .btn-back-dashboard {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+
+  .btn-logout {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+
+  .navbar-right {
+    gap: 0.5rem;
+  }
 }
 
 @media (max-width: 480px) {
