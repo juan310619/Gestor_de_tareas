@@ -5,6 +5,7 @@ import { navigate } from "../services/navigate";
 import AssignTasksModal from "../components/AssignTasksModal";
 import SearchBar from "../components/SearchBar";
 import ProfileModal from "../components/ProfileModal";
+import ConfirmModal from "../components/ConfirmModal";
 import "../styles/dashboard.css";
 
 interface ProjectWithTasks extends ProjectRead {
@@ -40,6 +41,8 @@ export default function Dashboard() {
   const [error, setError] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
   // Cargar proyectos al montar componente
   useEffect(() => {
@@ -187,21 +190,27 @@ export default function Dashboard() {
 
   // ELIMINAR PROYECTO
   const handleDeleteProject = async (id: number) => {
-    if (confirm("¿Estás seguro de que quieres eliminar este proyecto?")) {
-      try {
-        setError("");
-        await apiService.deleteProject(id);
-        // Actualizar ambos estados (projects y allProjects) para reflejar el cambio inmediatamente
-        const updatedProjects = projects.filter((p) => p.id !== id);
-        const updatedAllProjects = allProjects.filter((p) => p.id !== id);
-        setProjects(updatedProjects);
-        setAllProjects(updatedAllProjects);
-      } catch (err) {
+    setDeleteTargetId(id);
+    setShowConfirm(true);
+  };
+
+  const confirmDeleteProject = async () => {
+    if (deleteTargetId === null) return;
+    try {
+      setError("");
+      await apiService.deleteProject(deleteTargetId);
+      const updatedProjects = projects.filter((p) => p.id !== deleteTargetId);
+      const updatedAllProjects = allProjects.filter((p) => p.id !== deleteTargetId);
+      setProjects(updatedProjects);
+      setAllProjects(updatedAllProjects);
+    } catch (err) {
         const errorMsg =
           err instanceof Error ? err.message : "Error al eliminar proyecto";
         setError(errorMsg);
         console.error("Error:", err);
-      }
+    } finally {
+      setShowConfirm(false);
+      setDeleteTargetId(null);
     }
   };
 
@@ -281,6 +290,18 @@ export default function Dashboard() {
           </div>
         </div>
       </section>
+
+      {/* CONFIRMAR ELIMINACIÓN */}
+      {showConfirm && (
+        <ConfirmModal
+          message="¿Estás seguro de que quieres eliminar este proyecto?"
+          onConfirm={confirmDeleteProject}
+          onCancel={() => {
+            setShowConfirm(false);
+            setDeleteTargetId(null);
+          }}
+        />
+      )}
 
       {/* ERROR MESSAGE */}
       {error && (

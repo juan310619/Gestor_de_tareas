@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Task } from "../types/task";
 import { STATUS_LABELS, Status } from "../types/task";
 import DescriptionEditor from "./DescriptionEditor";
+import ConfirmModal from "./ConfirmModal";
 
 interface Props {
   task: Task;
@@ -25,11 +26,14 @@ export default function TaskModal({
   const [descriptionImages, setDescriptionImages] = useState(
     task.descriptionImages || "",
   );
+  const [error, setError] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const handleSave = () => {
-    // Validar tamaño de imágenes (10MB)
+    setError("");
+
     if (descriptionImages && descriptionImages.length > 10 * 1024 * 1024) {
-      alert("La tarea es demasiado pesada debido a las imágenes. Por favor, elimina algunas.");
+      setError("La tarea es demasiado pesada. Elimina algunas imágenes.");
       return;
     }
 
@@ -45,9 +49,8 @@ export default function TaskModal({
   };
 
   const handleDelete = () => {
-    if (confirm("¿Estás seguro de que deseas eliminar esta tarea?")) {
-      onDelete(task.id);
-    }
+    onDelete(task.id);
+    setShowConfirm(false);
   };
 
   return (
@@ -61,6 +64,20 @@ export default function TaskModal({
             ✕
           </button>
         </div>
+
+        {showConfirm && (
+          <ConfirmModal
+            message="¿Estás seguro de que deseas eliminar esta tarea?"
+            onConfirm={handleDelete}
+            onCancel={() => setShowConfirm(false)}
+          />
+        )}
+
+        {error && (
+          <div style={{ padding: "0 1.5rem", paddingTop: "0.5rem" }}>
+            <div style={styles.errorMsg}>{error}</div>
+          </div>
+        )}
 
         {isEditing ? (
           <div style={styles.formContent}>
@@ -199,7 +216,7 @@ export default function TaskModal({
               <button onClick={() => setIsEditing(true)} style={styles.editBtn}>
                 ✏️ Editar
               </button>
-              <button onClick={handleDelete} style={styles.deleteBtn}>
+              <button onClick={() => setShowConfirm(true)} style={styles.deleteBtn}>
                 🗑️ Eliminar
               </button>
               <button onClick={onClose} style={styles.closeModalBtn}>
@@ -412,6 +429,15 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: 600,
     fontSize: "0.9rem",
   } as React.CSSProperties,
+  errorMsg: {
+    backgroundColor: "#450a0a",
+    borderLeft: "4px solid #ef4444",
+    padding: "0.75rem",
+    borderRadius: "6px",
+    color: "#fca5a5",
+    fontSize: "0.85rem",
+    marginBottom: "0.5rem",
+  },
   imagesDisplay: {
     display: "flex",
     flexWrap: "wrap",

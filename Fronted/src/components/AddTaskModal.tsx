@@ -24,16 +24,18 @@ export default function AddTaskModal({ onClose, onSave }: Props) {
   const [priority, setPriority] = useState("medium");
   const [dueDate, setDueDate] = useState("");
   const [descriptionImages, setDescriptionImages] = useState("");
+  const [error, setError] = useState("");
 
   const handleSave = () => {
+    setError("");
+
     if (!title.trim()) {
-      alert("Por favor, ingresa un título para la tarea");
+      setError("Por favor, ingresa un título para la tarea");
       return;
     }
 
-    // Validar tamaño de imágenes (10MB)
     if (descriptionImages && descriptionImages.length > 10 * 1024 * 1024) {
-      alert("La tarea es demasiado pesada debido a las imágenes. Por favor, elimina algunas.");
+      setError("La tarea es demasiado pesada. Elimina algunas imágenes.");
       return;
     }
 
@@ -64,6 +66,9 @@ export default function AddTaskModal({ onClose, onSave }: Props) {
         </div>
 
         <div style={styles.content}>
+          {error && (
+            <div style={styles.errorMsg}>{error}</div>
+          )}
           <label style={styles.label}>
             <span style={styles.labelText}>Título *</span>
             <input
@@ -210,6 +215,15 @@ const styles: { [key: string]: React.CSSProperties } = {
     flex: 1,
     minHeight: 0,
   } as React.CSSProperties,
+  errorMsg: {
+    backgroundColor: "#450a0a",
+    borderLeft: "4px solid #ef4444",
+    padding: "0.75rem",
+    borderRadius: "6px",
+    color: "#fca5a5",
+    fontSize: "0.85rem",
+    marginBottom: "1rem",
+  },
   label: {
     display: "flex",
     flexDirection: "column",
