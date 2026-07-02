@@ -34,23 +34,8 @@ services:
         sync: false
       - key: ALLOWED_ORIGINS
         value: https://gestortareastarjeta.netlify.app
-      # ⚠️ Tras el primer deploy, agregá la URL del frontend en Render:
-      # Ej: https://gestor-tareas-frontend.onrender.com
-      # Podés editarlo desde el Dashboard de Render → Environment
-
-  # ───── Frontend (Vite + React) ─────
-  - type: static_site
-    name: gestor-tareas-frontend
-    region: oregon
-    buildCommand: cd Fronted && npm install && npm run build
-    staticPublishPath: Fronted/dist
-    buildFilter:
-      paths:
-        - Fronted/**
-    envVars:
-      - key: VITE_API_URL
-        value: https://gestor-tareas-api.onrender.com
-      # ⚠️ Ajustá esta URL si el backend se llama distinto en tu dashboard
+      # ⚠️ Tras el deploy, agregá la URL del frontend (Static Site) acá.
+      # Se edita desde Render Dashboard → gestor-tareas-api → Environment
 
 databases:
   - name: gestor-tareas-db
