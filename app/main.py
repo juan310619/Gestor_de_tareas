@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request as FastAPIRequest
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -67,8 +67,26 @@ app.add_middleware(
 # ✅ Crea las tablas al iniciar la aplicación
 create_tables()
 
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://gestortareastarjeta.netlify.app")
+FRONTEND_DIST = os.path.join(os.path.dirname(os.path.dirname(__file__)), "Fronted", "dist")
+FRONTEND_INDEX = os.path.join(FRONTEND_DIST, "index.html")
+
 @app.get("/")
 def read_root():
+    if os.path.exists(FRONTEND_INDEX):
+        with open(FRONTEND_INDEX, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
     return {"message": "Hola desde FastAPI 👋"}
 
 app.include_router(api.api_router, prefix='/api')
+
+@app.api_route("/{full_path:path}", methods=["GET", "HEAD"])
+async def catch_all_frontend_routes(full_path: str):
+    if full_path.startswith("api/") or full_path.startswith("api"):
+        return JSONResponse(status_code=404, content={"detail": "Not found"})
+
+    if os.path.exists(FRONTEND_INDEX):
+        with open(FRONTEND_INDEX, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+
+    return RedirectResponse(url=f"{FRONTEND_URL}/{full_path}")

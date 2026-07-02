@@ -33,9 +33,9 @@ services:
       - key: SMTP_FROM
         sync: false
       - key: ALLOWED_ORIGINS
+        value: https://gestortareastarjeta.netlify.app,https://gestor-de-tareas-iz9b.onrender.com
+      - key: FRONTEND_URL
         value: https://gestortareastarjeta.netlify.app
-      # ⚠️ Tras el deploy, agregá la URL del frontend (Static Site) acá.
-      # Se edita desde Render Dashboard → gestor-tareas-api → Environment
 
 databases:
   - name: gestor-tareas-db
