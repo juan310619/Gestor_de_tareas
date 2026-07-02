@@ -67,7 +67,7 @@ app.add_middleware(
 # ✅ Crea las tablas al iniciar la aplicación
 create_tables()
 
-FRONTEND_URL = os.getenv("FRONTEND_URL", "https://gestortareastarjeta.netlify.app")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://gestor-de-tareas-iz9b.onrender.com")
 FRONTEND_DIST = os.path.join(os.path.dirname(os.path.dirname(__file__)), "Fronted", "dist")
 FRONTEND_INDEX = os.path.join(FRONTEND_DIST, "index.html")
 
