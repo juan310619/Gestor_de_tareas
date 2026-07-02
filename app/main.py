@@ -1,7 +1,9 @@
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Request as FastAPIRequest
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -19,6 +21,21 @@ app = FastAPI(redirect_slashes=False)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: FastAPIRequest, exc: RequestValidationError):
+    errors = []
+    for error in exc.errors():
+        msg = error.get("msg", "")
+        msg = msg.replace("Value error, ", "")
+        field = error.get("loc", [])[-1] if error.get("loc") else ""
+        label = field.replace("_", " ").title() if field else ""
+        errors.append(f"{label}: {msg}" if label else msg)
+    return JSONResponse(
+        status_code=422,
+        content={"detail": ". ".join(errors)},
+    )
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
