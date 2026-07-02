@@ -8,49 +8,43 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from app.database.database import create_tables
-from app.models import user_model, tasks_model, projects_model  # Importa todos los modelos
+from app.models import user_model, tasks_model, projects_model
 from app.routes import api
 
 load_dotenv()
 
-# ✅ Rate Limiter global
 limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(redirect_slashes=False)
 
-# Registrar limiter en la app
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
-# ✅ 1. Clase del Middleware de headers de seguridad
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
-        response.headers["X-XSS-Protection"] = "1; mode=block"
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-        response.headers["Cache-Control"] = "no-store"
+        if response.status_code < 400:
+            response.headers["X-Content-Type-Options"] = "nosniff"
+            response.headers["X-Frame-Options"] = "DENY"
+            response.headers["X-XSS-Protection"] = "1; mode=block"
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response
 
-# ✅ 2. Agregar SecurityHeaders PRIMERO
-app.add_middleware(SecurityHeadersMiddleware)
 
-# ✅ 3. Configurar CORS y agregarlo AL FINAL 
-# (Esto asegura que sea el último en procesar la respuesta y el navegador reciba los headers de CORS)
 raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173")
 allowed_origins = [o.strip() for o in raw_origins.split(",") if o.strip()]
 
-# Imprimir en logs de Render para verificar que se lee bien la variable
 print(f"INFO: Cargando orígenes permitidos: {allowed_origins}")
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],  
-    allow_headers=["*"],  
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # ✅ Crea las tablas al iniciar la aplicación
