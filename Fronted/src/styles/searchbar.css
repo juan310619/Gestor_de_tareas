@@ -58,3 +58,21 @@
 .clear-button:hover {
   color: #333;
 }
+
+@media (max-width: 768px) {
+  .search-bar-container {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 1rem;
+    width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-bar-container {
+    max-width: 100%;
+    padding: 0 1.5rem;
+    width: auto;
+  }
+}
