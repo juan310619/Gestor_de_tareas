@@ -31,8 +31,11 @@ def get_current_user_info(current_user: UserRead = Depends(get_current_user)):
 @router.post("/users", response_model = UserRead)
 @limiter.limit("3/minute")
 def create_user(request: Request, user:UserCreate, db:Session= Depends(get_db)):
-    if crud.check_existing_user(db=db, email=user.email, username=user.username):
-        raise  HTTPException(status_code=409, detail="Email or username already registered")
+    conflict = crud.check_existing_user(db=db, email=user.email, username=user.username)
+    if conflict:
+        if conflict.email == user.email:
+            raise HTTPException(status_code=409, detail="El correo electrónico ya está registrado")
+        raise HTTPException(status_code=409, detail="El nombre de usuario ya está en uso")
     return crud.create_user(db,user)
 
 

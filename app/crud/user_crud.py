@@ -7,13 +7,13 @@ from app.utils.password_utils import get_password_hash
 from fastapi import HTTPException
 
 
-def check_existing_user(db: Session, email: str, username: str) -> bool:
+def check_existing_user(db: Session, email: str, username: str) -> User | None:
     existing_user = db.exec(
         select(User).where(
             (User.email == email) | (User.username == username)
         )
     ).first()
-    return existing_user is not None
+    return existing_user
 
 def validate_unique_user_fields(
     db: Session,
@@ -33,10 +33,10 @@ def validate_unique_user_fields(
 
     if existing_user:
         if email and existing_user.email == email:
-            raise HTTPException(status_code=409, detail="Email already registered")
+            raise HTTPException(status_code=409, detail="El correo electrónico ya está registrado")
 
         if username and existing_user.username == username:
-            raise HTTPException(status_code=409, detail="Username already registered")
+            raise HTTPException(status_code=409, detail="El nombre de usuario ya está en uso")
 
 
 def get_user_by_email(db:Session, email:str):
