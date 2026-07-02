@@ -50,8 +50,23 @@ export default function RegisterModal({
         return;
       }
 
-      if (password.length < 6) {
-        setError("La contraseña debe tener al menos 6 caracteres");
+      if (password.length < 8) {
+        setError("La contraseña debe tener al menos 8 caracteres");
+        setLoading(false);
+        return;
+      }
+      if (!/[A-Z]/.test(password)) {
+        setError("La contraseña debe tener al menos una mayúscula");
+        setLoading(false);
+        return;
+      }
+      if (!/[a-z]/.test(password)) {
+        setError("La contraseña debe tener al menos una minúscula");
+        setLoading(false);
+        return;
+      }
+      if (!/[0-9]/.test(password)) {
+        setError("La contraseña debe tener al menos un número");
         setLoading(false);
         return;
       }
@@ -146,7 +161,7 @@ export default function RegisterModal({
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Mínimo 6 caracteres"
+                placeholder="Mínimo 8 caracteres"
                 disabled={loading}
               />
               <button
@@ -202,6 +217,10 @@ export default function RegisterModal({
                 )}
               </button>
             </div>
+          </div>
+
+          <div className="password-requirements">
+            La contraseña debe tener: 8+ caracteres, 1 mayúscula, 1 minúscula y 1 número
           </div>
 
           {error && <div className="error-message">{error}</div>}
