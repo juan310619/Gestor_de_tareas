@@ -89,4 +89,4 @@ async def catch_all_frontend_routes(full_path: str):
         with open(FRONTEND_INDEX, "r", encoding="utf-8") as f:
             return HTMLResponse(content=f.read())
 
-    return RedirectResponse(url=f"{FRONTEND_URL}/{full_path}")
+    return RedirectResponse(url=FRONTEND_URL)

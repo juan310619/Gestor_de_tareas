@@ -10,7 +10,6 @@ function App() {
     "home" | "dashboard" | "tasks" | "reset-password"
   >("home");
 
-  // Verificar ruta cuando el componente se monta
   useEffect(() => {
     const path = window.location.pathname;
     const token = localStorage.getItem("access_token");
@@ -21,11 +20,15 @@ function App() {
       setCurrentPage("dashboard");
     } else if (path === "/tasks" && token) {
       setCurrentPage("tasks");
-    } else if (path === "/" || !token) {
+    } else if (path === "/" && !token) {
       setCurrentPage("home");
+    } else if (path === "/" && token) {
+      setCurrentPage("dashboard");
+      window.history.replaceState(null, "", "/dashboard");
+    } else {
+      window.location.href = "/";
     }
 
-    // Escuchar cambios de URL
     const handlePopState = () => {
       const newPath = window.location.pathname;
       const token = localStorage.getItem("access_token");
@@ -36,8 +39,13 @@ function App() {
         setCurrentPage("dashboard");
       } else if (newPath === "/tasks" && token) {
         setCurrentPage("tasks");
-      } else {
+      } else if (newPath === "/" && !token) {
         setCurrentPage("home");
+      } else if (newPath === "/" && token) {
+        setCurrentPage("dashboard");
+        window.history.replaceState(null, "", "/dashboard");
+      } else {
+        window.location.href = "/";
       }
     };
 
