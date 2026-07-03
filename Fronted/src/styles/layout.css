@@ -391,30 +391,31 @@
 
   /* === MOBILE NAVBAR === */
   .layout-navbar {
-    padding: 0.75rem 1rem;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    gap: 0.3rem;
   }
 
   .navbar-left {
-    gap: 0.5rem;
+    gap: 0.3rem;
   }
 
   .navbar-logo {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 
   .btn-back-dashboard {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.8rem;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.7rem;
+    white-space: nowrap;
   }
 
   .navbar-right {
-    gap: 0.5rem;
+    gap: 0.3rem;
   }
 
   .btn-logout {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.8rem;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.7rem;
+    white-space: nowrap;
   }
 }
